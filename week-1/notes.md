@@ -111,10 +111,12 @@ kubectl explain pod.spec.containers.name
 ## Daily Progress Tracking
 
 ### Day 1 (Wednesday)
-- YAML Speed: ___/10 pods in 15 minutes
-- Interpretation Speed: _____ seconds average
-- Tasks Completed: ____/____
+- YAML Speed: 10/10 pods in 15 minutes
+- Interpretation Speed: ???? seconds average
+- Tasks Completed: 5/5
 - Areas to improve:
+  - VIM
+  - Reading `explain output`
 
 ### Day 2 (Thursday)
 - YAML Speed: ___/10 pods in 15 minutes

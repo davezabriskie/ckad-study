@@ -28,6 +28,9 @@ Kubernetes for the Absolute Beginners + CKAD with Practice Tests (Mumshad Mannam
 - **Variability**: Mix 2-minute "easy" tasks with 8-minute "complex" ones
 - Start timed drills no later than Week 2 Day 2
 - Optimize for exam speed + YAML fluency, not passive learning
+- Daily plans should have two documents:
+    - Questions / prompts
+    - Solutions and answers
 
 ## Review Integration Rules
 - **Week 2+**: Every session starts with 15-min YAML sprint (PRIMARY)
