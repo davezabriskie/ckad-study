@@ -21,7 +21,7 @@
 
 ### Thursday - 75 minutes
 - **Learning**: Udemy Multi-Container Pods (30 min)
-- **YAML Speed Writing**: Deployment + Service YAML (15 min)
+- **YAML Speed Writing**: Multi-container pod YAML (sidecar + init container variants) (15 min)
 - **Task Interpretation Drills** (5 min)
 - **Mixed Tasks** (20 min flexible window):
   - Quick: Pod with resource limits
@@ -30,7 +30,7 @@
 
 ### Friday - 90 minutes
 - **Learning**: Pod Design patterns (35 min)
-- **YAML Speed Writing**: All 3 core types (pod, deployment, service) (15 min)
+- **YAML Speed Writing**: Pod + Service YAML (15 min)
 - **Task Interpretation Drills** (5 min)
 - **Mixed Tasks** (30 min flexible window):
   - 2 Quick tasks: Basic pods with different configs
@@ -67,7 +67,7 @@ Every session must include:
 ## Success Metrics
 
 By end of week, you should:
-- [ ] Write pod, deployment, service YAML from memory
+- [ ] Write pod and service YAML from memory (single-container and multi-container variants)
 - [ ] Complete 30% tasks that combine pod + configuration
 - [ ] Complete milestone in under 20 minutes
 - [ ] Master task interpretation speed (10-15 seconds)

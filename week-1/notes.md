@@ -119,10 +119,13 @@ kubectl explain pod.spec.containers.name
   - Reading `explain output`
 
 ### Day 2 (Thursday)
-- YAML Speed: ___/10 pods in 15 minutes
-- Interpretation Speed: _____ seconds average
-- Tasks Completed: ____/____
+- YAML Speed: 2/10 pods in 15 minutes
+- Interpretation Speed: ???? seconds average
+- Tasks Completed: 5/5
 - Areas to improve:
+  - configmap
+  - volumeMounts
+  - busybox command structure
 
 ### Day 3 (Friday)
 - YAML Speed: ___/10 pods in 15 minutes
