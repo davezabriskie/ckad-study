@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: twin
+spec:
+  containers:
+    - name: primary
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+    - name: monitor
+      image: busybox
+      command: ['sh', '-c', 'while true; do echo "monitoring"; sleep 10; done'] 

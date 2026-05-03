@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: prod-app
+  labels:
+    app: prod-app
+spec:
+  containers:
+    - name: prod-app
+      image: nginx:1.21
+      envFrom:
+        - configMapRef:
+            name: env-cfg
+      ports:
+        - containerPort: 80

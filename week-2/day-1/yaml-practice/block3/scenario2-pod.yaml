@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: label-mismatch
+  labels:
+    app: frontend
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21

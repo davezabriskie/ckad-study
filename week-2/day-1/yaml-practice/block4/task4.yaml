@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: staged
+spec:
+  initContainers:
+    - name: busybox
+      image: busybox
+      command: ['sh', '-c', 'echo "ready"']
+  containers:
+    - name: main
+      image: nginx:1.21

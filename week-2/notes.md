@@ -1,0 +1,74 @@
+# Week 2 Study Notes
+
+## Key Concepts
+
+### Labels, Selectors, Annotations
+- **Labels**: key/value pairs on any resource — used for selection and filtering
+- **Selectors**: filter resources by label (`kubectl get pods -l app=web`)
+- **Annotations**: metadata not used for selection — store non-identifying info
+- Service `selector` must exactly match pod `labels` — most common wiring bug
+
+### Deployments
+- Wraps a pod template in a controller that manages replicas and rollouts
+- `spec.selector.matchLabels` and `spec.template.metadata.labels` must be identical
+- Rolling update is the default strategy — zero downtime by default
+
+### Jobs + CronJobs
+- **Job**: runs a pod to completion (once, or N times via `spec.completions`)
+- **CronJob**: schedules a Job on a cron schedule via `spec.schedule`
+- Job pods don't restart on success — `restartPolicy: Never` or `OnFailure`
+
+## kubectl Commands for Week 2
+
+```bash
+# Deployment management
+kubectl create deployment web --image=nginx:1.21 --replicas=3
+kubectl scale deployment web --replicas=5
+kubectl set image deployment/web nginx=nginx:1.22
+kubectl rollout status deployment/web
+kubectl rollout history deployment/web
+kubectl rollout undo deployment/web
+
+# Job / CronJob
+kubectl create job batch --image=busybox -- echo done
+kubectl get jobs
+kubectl get cronjobs
+```
+
+## Daily Progress Tracking
+
+### Day 1 (Saturday May 2) — Week 1 Catchup
+- YAML Speed (Service): 6/6 reps clean
+- YAML Speed (Sidecar): 5/5 reps clean
+- Troubleshooting: 3/3 scenarios resolved
+- Milestone: PASS 
+- Areas to improve:
+  - ConfigMap
+  - Port mapping
+  - Service specifics (kept forgetting ports format)
+
+### Day 2 (Sunday May 3)
+- YAML Speed: _____ reps clean
+- Tasks Completed: ____/____
+- Areas to improve:
+
+### Day 3 (Monday May 4)
+- YAML Speed: _____ reps clean
+- Tasks Completed: ____/____
+- Areas to improve:
+
+### Day 4 (Tuesday May 5)
+- YAML Speed: _____ reps clean
+- Tasks Completed: ____/____
+- Areas to improve:
+
+### Day 5 (Wednesday May 6)
+- YAML Speed: _____ reps clean
+- Tasks Completed: ____/____
+- Areas to improve:
+
+### Day 6 (Saturday May 9) — Milestone
+- Milestone Result: PASS / FAIL
+- Tasks Completed: ____/5
+- Total Time: _____ min
+- Areas to improve:

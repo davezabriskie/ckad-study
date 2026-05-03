@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-demo
+  labels:
+    app: demo
+spec:
+  containers:
+    - name: main-app
+      image: nginx:1.21
+      ports:
+        - containerPort: 80
+    - name: logger
+      image: busybox
+      command: ['sh', '-c', 'while true; do echo "$(date) log entry"; sleep 10; done']
