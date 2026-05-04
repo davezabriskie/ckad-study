@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: any-name
+  labels:
+    fluency: "1"
+    day: "2"
+    week: "2"
+spec:
+  containers:
+    - name: any-name-container
+      image: nginx:1.21
+      ports:
+        - containerPort: 80

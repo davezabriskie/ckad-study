@@ -48,9 +48,12 @@ kubectl get cronjobs
   - Service specifics (kept forgetting ports format)
 
 ### Day 2 (Sunday May 3)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+- YAML Speed: 3/3 Deployment reps clean, 5/5 fluency reps
+- Tasks Completed: 2/2 (quick Deployment + medium Service)
 - Areas to improve:
+  - Resource requests missing from limits-only pod (fluency-2)
+  - Memory units: use Mi not M
+  - ReplicaSet adoption of orphaned pods — Deployments don't co-opt pre-existing pods, only RS can adopt orphans and it's unreliable
 
 ### Day 3 (Monday May 4)
 - YAML Speed: _____ reps clean

@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: api
+    type: deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+        deployment: "not_really"
+    spec:
+      containers:
+        - name: api-worker
+          image: nginx:1.21
+          ports:
+            - containerPort: 80

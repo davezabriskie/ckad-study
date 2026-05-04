@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deploy
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      name: web
+      labels:
+        app: web
+        worker: yeppers
+    spec:
+      containers:
+        - name: web-worker
+          image: nginx:1.21
+          ports:
+            - containerPort: 80

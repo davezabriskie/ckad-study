@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-data
+  labels:
+    week: "2"
+    day: "2"
+    fluency: "5"
+spec:
+  containers:
+    - name: l-o-g
+      image: busybox
+      command: ['sh', '-c', 'echo $LOADED'] 
+      envFrom:
+        - configMapRef:
+            name: datum

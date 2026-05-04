@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: new-service
+  labels:
+    new: "you_betcha"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      test: "pass"
+  template:
+    metadata:
+      labels:
+        test: pass
+        preexisting: "nope"
+    spec:
+      containers:
+        - name: robot
+          image: busybox
+          command: ['sh', '-c', 'echo $(date) sorry boss, it is too late']
