@@ -5,21 +5,20 @@ This repository contains my 9-week study plan and practice materials for the Cer
 ## Structure
 
 - `ckad-plan.md` - Complete 9-week study plan
-- `plan.md` - Original CKA study plan (for reference)
 - `week-X/` - Weekly practice materials
 - `resources/` - Shared reference materials
 
 ## Study Approach
 
-- **YAML Priority**: 80% focus on writing YAML from memory
+- **Primary Technique**: `kubectl --dry-run=client -o yaml` scaffold + manual refinement
 - **Cross-domain Tasks**: Combining multiple Kubernetes concepts
 - **Variable Difficulty**: Mixing quick (2-3 min) and complex (7-10 min) tasks
 - **Time Pressure Training**: 3-minute skip rule with flexible windows
 
 ## Weekly Progress
 
-- [ ] Week 1 - Core Application Concepts
-- [ ] Week 2 - Workload Management
+- [X] Week 1 - Core Application Concepts
+- [ ] Week 2 - Workload Management (in progress)
 - [ ] Week 3 - Application Configuration
 - [ ] Week 4 - Networking & Services
 - [ ] Week 5 - Persistence & Storage
