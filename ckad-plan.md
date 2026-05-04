@@ -17,313 +17,452 @@ Kubernetes for the Absolute Beginners + CKAD with Practice Tests (Mumshad Mannam
 - 60–90 min weekdays, 2–3 hrs weekends
 - Every day must include:
   1. Learning (Udemy course sections)
-  2. **YAML speed writing (15 min) - PRIMARY FOCUS**
+  2. **kubectl scaffold + refine cycle (15 min) — PRIMARY FOCUS**
   3. Task interpretation drills (5 min)
   4. Mixed atomic tasks with VARIABLE difficulty
-  5. kubectl explain speed lookups (5 min optional)
+  5. **kubectl explain speed lookups (5 min) — MANDATORY**
+
+- **Core technique — kubectl-generated YAML + manual refinement**:
+  Generate a scaffold imperatively, output to a file, edit to add fields not produced by the generator.
+  This is the primary exam technique — not writing YAML from scratch.
+  ```bash
+  kubectl run mypod --image=nginx --dry-run=client -o yaml > pod.yaml
+  kubectl create deployment myapp --image=nginx --replicas=3 --dry-run=client -o yaml > deploy.yaml
+  kubectl create service clusterip mysvc --tcp=80:80 --dry-run=client -o yaml > svc.yaml
+  kubectl create configmap mycm --from-literal=key=val --dry-run=client -o yaml > cm.yaml
+  kubectl create role myrole --verb=get,list --resource=pods --dry-run=client -o yaml > role.yaml
+  ```
+  The practice goal: know which fields to add after generation (probes, volumes, securityContext,
+  command/args, etc.) and add them quickly without looking them up.
 
 - **Session Structure**: Flexible time windows, not rigid per-task limits
 - **Task Mixing**: 30% of tasks must combine 2+ domains
 - **Skip Rule**: Stop task if no progress after 3 minutes
 - **Variability**: Mix 2-minute "easy" tasks with 8-minute "complex" ones
 - Start timed drills no later than Week 2 Day 2
-- Optimize for exam speed + YAML fluency, not passive learning
-- Daily plans should have two documents:
-    - Questions / prompts
-    - Solutions and answers
+- Optimize for exam speed via scaffold + refine, not passive learning or scratch YAML
 
 ## Review Integration Rules
-- **Week 2+**: Every session starts with 15-min YAML sprint (PRIMARY)
+- **Week 2+**: Every session starts with a 15-min scaffold + refine sprint
 - **Week 3+**: Task interpretation speed drills before each session
 - **Week 4+**: 30% cross-domain tasks minimum
-- **Weekly reviews**: Focus on YAML fluency and interpretation speed
+- **Weekly reviews**: Focus on scaffold speed and refinement accuracy
 
 Core tools:
-- **YAML writing from memory (80% of practice time)**
-- kubectl imperative commands (20% of practice time)
-- kubectl explain for quick reference
+- **kubectl --dry-run=client -o yaml** (primary generation technique)
+- **Manual YAML editing** in vim — adding fields the generator doesn't produce
+- **kubectl explain** — mandatory daily drill; no internet on exam, this is your documentation
+- **Imperative kubectl mutations**: label, annotate, set image, patch, edit, scale, rollout
 - Practice environments: killercoda.com, labs.k8s.io, or local cluster
-- Focus: YAML fluency + task interpretation speed
 
 ---
 
 # WEEK 1 — Core Application Concepts
+## Status: COMPLETE
 
 ## Focus
-Pods, multi-container patterns, container lifecycle, basic debugging
+Pods, multi-container patterns (sidecar, init), container lifecycle,
+probes, command/args overrides, basic debugging
 
-## Requirements
-- Introduce variable task difficulty from Day 1
-- **PRIMARY**: YAML writing from memory (deployment, pod, service)
-- Include task interpretation training:
-  - Read task prompt aloud
-  - Identify key requirements (10-15 seconds)
-  - Map to YAML structure before writing
-- **NEW**: 30% tasks combine pod + configuration concepts
+## Topics Covered
+- Pod scaffold generation and refinement
+- Multi-container pod patterns: sidecar and init containers
+- **Probes**: liveness, readiness, startup — httpGet, exec, tcpSocket
+- **command/args overrides**: difference between Dockerfile CMD/ENTRYPOINT and pod `command`/`args`
+- Basic debugging: kubectl describe, logs, exec
+- ConfigMap basics (introduced)
+- Service exposure basics (introduced)
 
-## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick (2-3 min)**: Create simple pod from memory
-- **Medium (4-6 min)**: Create multi-container pod with specific labels/annotations
-- **Complex (7-10 min)**: Pod + configmap + resource limits combination
-- **Cross-domain**: Pod with service exposure (pod + networking)
-
-## Milestone (PASS/FAIL)
-Complete mixed task set in **20-minute flexible window**:
-- 2 quick YAML tasks (pods, services)
-- 2 medium tasks (multi-container scenarios)
-- 1 complex cross-domain task (pod + config + service)
-- Apply 3-minute individual skip rule
-- **NEW**: Include 30-second interpretation phase per task
-
-## Udemy requirement
-Use:
-- Pods
-- Multi-Container Pods
-- Pod Design sections
+## Exam Domain Mapping
+- Application Design and Build (20%): pod lifecycle, multi-container patterns
 
 ---
 
-# WEEK 2 — Workload Management
+# WEEK 2 — Workload Management + Deployment Strategies
+## Status: IN PROGRESS (Day 2)
 
 ## Focus
-Deployments, ReplicaSets, Jobs, CronJobs, rolling updates, rollbacks
+Deployments, ReplicaSets, Jobs, CronJobs, rolling updates, rollbacks,
+blue/green and canary patterns, imperative kubectl mutations
 
 ## Requirements
-- **YAML Priority**: 80% time on YAML writing, 20% on kubectl commands
+- **Scaffold + refine**: Generate all Deployment/Job/CronJob YAML imperatively, then add fields
 - Variable task complexity within each session
 - Cross-domain mixing: deployment + configuration
-- Speed documentation lookup (kubectl explain deployment.spec)
+- **Remaining days — Deployment strategies**:
+  - Blue/green: two Deployments (v1, v2); Service selector switches between them
+  - Canary: two Deployments share selector label `app=myapp`; ratio controlled by replica count
+- **Imperative kubectl mutations (daily drill)**:
+  ```bash
+  kubectl set image deployment/web nginx=nginx:1.22
+  kubectl scale deployment web --replicas=5
+  kubectl rollout undo deployment/web
+  kubectl label pod mypod env=prod
+  kubectl annotate pod mypod description="my note"
+  kubectl patch deployment web -p '{"spec":{"replicas":3}}'
+  ```
+
+## Topics to Cover
+- Deployment scaffold + refinement (selector/template label relationship)
+- Rolling updates: `kubectl rollout status/history/undo`, `kubectl set image`
+- Jobs: `completions`, `parallelism`, `restartPolicy: Never/OnFailure`
+- CronJobs: `spec.schedule`, relationship to Job
+- Blue/green and canary patterns
+- Imperative mutation commands as daily practice
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Update deployment image via YAML
-- **Medium**: Create deployment + service + configmap from memory
-- **Complex**: Deployment with multiple containers + init container + probes
+- **Quick**: Scale a Deployment; update image imperatively
+- **Medium**: Generate Deployment scaffold + add probes + expose as Service
+- **Complex**: Implement blue/green switch using two Deployments and one Service
 - **Cross-domain**: Deployment + service + ingress combination
 
 ## Milestone
 Complete mixed workload set in **25-minute flexible window**:
-- 3 quick tasks: Basic deployments and scaling
-- 2 medium tasks: Multi-component workloads
-- 1 complex task: Full deployment stack
-- **NEW**: Use kubectl explain for 1-2 quick references
-- **NEW**: Each task starts with 15-second interpretation drill
+- 3 quick tasks: deployments, scaling, rollback — all via imperative mutations
+- 2 medium tasks: scaffold + probe addition + service exposure
+- 1 complex task: blue/green or canary pattern from scratch
+
+## Exam Domain Mapping
+- Application Deployment (20%): rolling updates, rollbacks, blue/green, canary
 
 ---
 
-# WEEK 3 — Application Configuration
+# WEEK 3 — Application Configuration + Deployment Tooling
 
 ## Weekly Review (10 min)
-**YAML Speed Drill**: Write 3 YAML files from memory in <10 minutes
+**Scaffold Sprint**: Generate 3 resource types imperatively + add one non-default field each
 
 ## Focus
-ConfigMaps, Secrets, Environment Variables, volume mounting for config
+ConfigMaps, Secrets, environment variables, volume-mounted config, Helm, Kustomize
 
 ## Requirements
-- **YAML mastery**: ConfigMap and Secret YAML from memory
-- Variable difficulty configuration scenarios
+- **Scaffold + refine**: Generate ConfigMap/Secret imperatively; add volume mounts manually
+- All three ConfigMap injection patterns from memory (not from scratch — from a generated pod scaffold):
+  - `env` with `valueFrom.configMapKeyRef`
+  - `envFrom` with `configMapRef`
+  - `volumeMounts` with `volumes.configMap`
 - **Cross-domain focus**: 40% of tasks combine config + other domains
-- Quick kubectl explain usage for configuration specs
+- **Helm (Days 1-2)**:
+  - `helm repo add`, `helm install`, `helm upgrade --install`
+  - Override values: `--set key=value`, `-f values.yaml`
+  - `helm list`, `helm get values`, `helm status`, `helm uninstall`
+  - Scope: use existing charts — not authoring
+- **Kustomize (Days 3-4)**:
+  - `kubectl apply -k ./dir`
+  - `kustomization.yaml`: `resources`, `commonLabels`, `namePrefix`, `images`
+  - Apply a simple overlay that patches a base resource
+  - Scope: apply overlays — not designing complex hierarchies
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Create configmap from literals via YAML
-- **Medium**: Pod + configmap + secret combination
-- **Complex**: Multi-container pod with different config sources
-- **Cross-domain**: Deployment + configmap + service (full app config)
+- **Quick**: Generate configmap + inject as env var into existing pod
+- **Medium**: Pod scaffold + configmap + secret (env pattern + volume pattern)
+- **Complex**: Deploy an app via Helm with custom values; verify pods running and config applied
+- **Cross-domain**: Kustomize overlay that patches a Deployment image and adds a label
 
 ## Milestone
-Complete configuration mix in **25-minute flexible window**:
-- 2 quick YAML tasks (configmap, secret creation)
-- 3 medium cross-domain combinations
-- 1 complex multi-component configuration scenario
-- **NEW**: Include kubectl explain for config specifications
-- **NEW**: Task interpretation phase (15 seconds per task)
+Complete configuration + tooling mix in **30-minute flexible window**:
+- 2 quick tasks (configmap + secret — at least 2 injection patterns)
+- 2 medium cross-domain combinations
+- 1 Helm install/upgrade task with value overrides
+- 1 Kustomize apply task from an overlay
+
+## Exam Domain Mapping
+- Application Deployment (20%): Helm, Kustomize
+- Application Environment, Configuration and Security (25%): ConfigMaps, Secrets
 
 ---
 
-# WEEK 4 — Networking & Services (HIGH WEIGHT)
+# WEEK 4 — Networking & Services + Debugging
 
 ## Weekly Review (15 min)
-**YAML Speed Drill**:
-- Week 1: Pod and service YAML (5 min)
-- Week 2: Deployment and job YAML (10 min)
+**Scaffold Sprint**:
+- Generate pod + deployment + service imperatively; add one custom field each
 
 ## Focus
-Services, Ingress, NetworkPolicies, service discovery, application connectivity
+Services, Ingress (HIGH REPETITION), NetworkPolicies (HIGH REPETITION),
+service discovery, connectivity debugging workflows
+
+## Why Ingress and NetworkPolicy get high repetition
+These two resource types are never generated cleanly by `kubectl --dry-run`. You must
+know their YAML structure from muscle memory. They are high-frequency, easy to get
+wrong under time pressure, and have no shortcut.
 
 ## Requirements
-- **YAML mastery**: Service and Ingress YAML from memory
+- **YAML from memory (exception to scaffold rule)**: Ingress and NetworkPolicy only —
+  these cannot be generated imperatively; write them directly
 - **Cross-domain focus**: 50% of tasks combine networking + other domains
-- Variable difficulty to simulate exam unpredictability
-- Quick kubectl explain usage for networking concepts
+- **Ingress repetition**: minimum 3 Ingress YAML reps per session — path rules, host rules, TLS
+- **NetworkPolicy repetition**: minimum 3 NetworkPolicy YAML reps per session —
+  ingress rules, egress rules, podSelector, namespaceSelector, combined selectors
+- **Debugging workflows (Day 3-4)**:
+  ```
+  Pod not reachable via Service →
+    kubectl get endpoints <svc>        # are there endpoints?
+    kubectl describe svc <svc>         # selector correct?
+    kubectl get pods -l <selector>     # do pods match?
+    kubectl describe pod               # is pod Ready?
+    kubectl exec -it <pod> -- curl     # is port actually listening?
+  ```
+
+## Ingress YAML to know cold
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-svc
+            port:
+              number: 80
+```
+
+## NetworkPolicy YAML to know cold
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-frontend
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+  policyTypes:
+  - Ingress
+```
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Expose deployment via service YAML
-- **Medium**: Service + ingress + TLS configuration
-- **Complex**: NetworkPolicy + service + pod + troubleshooting
-- **Cross-domain examples**:
-  - Service + ConfigMap (service configuration)
-  - Ingress + Secret (TLS certificates)
-  - NetworkPolicy + Deployment + Service (full stack)
+- **Quick**: Write a ClusterIP service; write a basic Ingress
+- **Medium**: Ingress + TLS (add Secret reference); NetworkPolicy allowing specific pod traffic
+- **Complex**: Full connectivity debug — broken service, wrong selector, missing endpoint
+- **Cross-domain**: NetworkPolicy + Deployment + Service + ConfigMap (full isolated app stack)
 
 ## Milestone
 Complete networking mix in **25-minute flexible window**:
-- 2 quick service/exposure tasks
+- 2 quick tasks (service + Ingress, written cold)
 - 2 medium cross-domain combinations
-- 1 complex multi-component networking scenario
-- **NEW**: Include kubectl explain usage for networking specs
-- **NEW**: Task interpretation phase (15 seconds per task)
+- 1 complex connectivity debugging scenario (fix broken access, no hints on what's wrong)
+- 1 NetworkPolicy written cold (specific ingress/egress rule)
+
+## Exam Domain Mapping
+- Services and Networking (20%): Services, Ingress, NetworkPolicies
+- Application Observability and Maintenance (15%): debugging workflows, logs
 
 ---
 
-# WEEK 5 — Persistence & Storage
+# WEEK 5 — Storage + Resource Management
 
 ## Weekly Review (15 min)
-**YAML Integration**: Cross-domain YAML writing
-- Write 4 different YAML files that work together (pod + config + service + storage)
+**Mixed Sprint**: Scaffold pod + deployment + service; write one Ingress and one NetworkPolicy cold
 
 ## Focus
-Volumes, PVC/PV, StatefulSets, persistent application data
+Volumes, PVC/PV, StatefulSets, resource requests/limits, ResourceQuota, LimitRange
 
 ## Requirements
-- **YAML mastery**: PVC and StatefulSet YAML from memory
+- **Scaffold + refine**: Generate pod scaffold, add volume/PVC fields manually
+- **PVC and StatefulSet YAML from memory** (no generator shortcut for volumeClaimTemplates)
 - Variable complexity storage scenarios
 - **Cross-domain focus**: 40% tasks combine storage + other domains
-- kubectl explain usage for storage specifications
+- **Resource management**:
+  - `resources.requests` and `resources.limits` in pod specs (CPU + memory)
+  - ResourceQuota at namespace level
+  - LimitRange: default requests/limits per container
+- kubectl explain for storage and resource spec fields
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Create PVC from memory
-- **Medium**: StatefulSet + PVC combination
-- **Complex**: Multi-container pod with multiple volume types
-- **Cross-domain**: StatefulSet + service + configmap (stateful application)
+- **Quick**: Scaffold pod + add volume mount; add resource limits to existing Deployment
+- **Medium**: StatefulSet + PVC combination with headless service
+- **Complex**: Multi-container pod + multiple volume types + resource constraints + NetworkPolicy
+- **Cross-domain**: StatefulSet + service + configmap + ResourceQuota
 
 ## Milestone
-Complete storage mix in **22-minute flexible window**:
-- 2 quick YAML tasks (PVC, basic volume mount)
+Complete storage + resource mix in **25-minute flexible window**:
+- 2 quick tasks (PVC scaffold + resource limits)
 - 2 medium cross-domain combinations
-- 1 complex stateful application scenario
-- **NEW**: Use kubectl explain for storage specs
-- **NEW**: Task interpretation training (15 seconds per task)
+- 1 complex stateful application scenario with resource constraints
+
+## Exam Domain Mapping
+- Application Design and Build (20%): persistent and ephemeral volumes
+- Application Environment, Configuration and Security (25%): resource requests, limits, quotas
 
 ---
 
-# WEEK 6 — Advanced Application Patterns
+# WEEK 6 — Security & Environment
 
 ## Weekly Review (15 min)
-**Complex YAML Drill**: Advanced patterns from memory
-- Write init container + probes + resources YAML without reference
+**Security Scaffold Drill**:
+- Generate pod scaffold + add SecurityContext fields cold
+- Generate Role + RoleBinding + ServiceAccount cold (no scaffold for Role — write directly)
 
 ## Focus
-Init containers, sidecar patterns, probes (liveness/readiness/startup), resource management
+SecurityContexts, Capabilities, RBAC (Roles/ClusterRoles/RoleBindings),
+ServiceAccounts, CRD awareness (light)
+
+## Why this week is a full week
+Application Environment, Configuration and Security is **25% of the exam** — the largest domain.
+RBAC and SecurityContexts appear in most complex exam scenarios.
 
 ## Requirements
-- **YAML mastery**: Advanced pod patterns from memory
-- Variable complexity probe and resource scenarios
-- **Cross-domain focus**: 50% tasks combine advanced patterns + other domains
-- kubectl explain for advanced pod specifications
+- **Scaffold + refine for pods**: Generate pod scaffold, add securityContext block manually
+- **YAML cold for RBAC**: Role, RoleBinding, ClusterRole, ClusterRoleBinding — no generator produces
+  a useful scaffold; know the structure directly
+- **SecurityContext fields to add to any pod scaffold**:
+  ```yaml
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+      add: ["NET_ADMIN"]
+  ```
+- **CRD awareness (light — one session only)**:
+  - `kubectl get crd` and `kubectl describe crd`
+  - Create a resource of a custom type from a given spec
+  - No Operator theory required
+- **Cross-domain focus**: 50% tasks combine security + other domains
+- kubectl explain for all security spec fields
+
+## RBAC scope
+- Role: namespace-scoped; specific verbs (get/list/create/delete) on specific resources
+- ClusterRole: cluster-wide permissions
+- RoleBinding: bind Role or ClusterRole to a ServiceAccount in a namespace
+- ServiceAccount: create and mount to a pod (`spec.serviceAccountName`)
+- Debug Forbidden: `kubectl auth can-i <verb> <resource> --as=system:serviceaccount:<ns>:<sa>`
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Add probes to existing deployment YAML
-- **Medium**: Init container + main container + resource limits
-- **Complex**: Multi-container + probes + shared volumes + resources
-- **Cross-domain**: Advanced deployment + service + config integration
+- **Quick**: Add SecurityContext to generated pod scaffold; create ServiceAccount
+- **Medium**: Role + RoleBinding + ServiceAccount wired to a Deployment
+- **Complex**: Pod with SecurityContext + dropped capabilities + non-default ServiceAccount + RBAC
+- **Cross-domain**: Deployment + ConfigMap + RBAC + ServiceAccount + NetworkPolicy
 
 ## Milestone
-Complete advanced patterns in **28-minute flexible window**:
-- 2 quick probe/resource tasks
-- 3 medium multi-container scenarios
-- 1 complex cross-domain advanced application
-- **NEW**: Heavy kubectl explain usage for complex specifications
-- **NEW**: Extended task interpretation (20 seconds for complex tasks)
+Complete security mix in **30-minute flexible window**:
+- 2 quick tasks (SecurityContext addition + ServiceAccount)
+- 2 medium RBAC combinations (Role + RoleBinding + ServiceAccount)
+- 1 complex end-to-end security scenario
+- 1 CRD task (create a resource of a custom type from a given spec)
+
+## Exam Domain Mapping
+- Application Environment, Configuration and Security (25%): all of it
 
 ---
 
-# WEEK 7 — Integration & Review
+# WEEK 7 — Integration, Debugging & Review
 
 ## Weekly Review (15 min)
-**Master YAML Sprint**: All core patterns
-- Write 6 different YAML types from memory without reference (pod, deployment, service, configmap, pvc, ingress)
+**Full Sprint**: Scaffold pod + deployment + service; write Ingress + NetworkPolicy + Role + RoleBinding cold
 
 ## Focus
-Mixed domain atomic tasks, speed optimization, advanced pod patterns
+Mixed domain atomic tasks, speed optimization, debugging workflows at full complexity
 
 ## Requirements
-- **YAML mastery**: All core resource types from memory
+- **Scaffold + refine** for all generatable resources; cold write for Ingress, NetworkPolicy, RBAC
 - **Cross-domain intensive**: 60% tasks combine 3+ domains
-- Variable difficulty with emphasis on complex scenarios
-- Heavy kubectl explain usage for speed and accuracy
+- **Debugging emphasis**: every session includes at least one break/fix scenario with no hints
+- All 5 exam domains must appear in this week's tasks
+- kubectl explain — target <20 seconds per lookup
+
+## Debugging scenarios to include
+- Pod stuck in CrashLoopBackOff: wrong command/args override
+- Pod stuck Pending: resource limits exceed node capacity
+- Service has no endpoints: label selector mismatch
+- Forbidden error: missing RoleBinding or wrong ServiceAccount
+- PVC stuck Pending: StorageClass mismatch or no available PV
+- Probe failing: wrong port or path causing container restart loop
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Security context or RBAC basics via YAML
-- **Medium**: Three-domain combinations (deployment + config + service)
-- **Complex**: Four-domain integrations (stateful app + networking + security + config)
-- **Cross-domain intensive**: End-to-end application scenarios
+- **Quick**: Fix a broken resource (single issue, no hints)
+- **Medium**: Three-domain scaffold + refine + verify running
+- **Complex**: Four-domain end-to-end (stateful app + networking + security + config)
+- **Break/fix**: Broken application, multiple issues, no guidance on what's wrong
 
 ## Milestone
 Complete integration challenge in **30-minute flexible window**:
-- 2 quick single-domain YAML tasks
+- 2 quick single-domain tasks
 - 3 medium cross-domain combinations (2-3 domains each)
-- 1 complex end-to-end application (4+ domains)
-- **NEW**: Extensive kubectl explain usage (expect 5-8 lookups)
-- **NEW**: Variable interpretation time (15-30 seconds based on complexity)
+- 1 complex end-to-end application (4+ domains, all verified running)
+- 1 break/fix scenario with no hints
+
+## Day 5 — Udemy Mock Exam (KodeKloud)
+Run one of the full mock exams from the Mumshad CKAD course (KodeKloud platform).
+Timed, no outside resources, treat it as a real exam attempt.
+
+After completion:
+- Record score per domain (KodeKloud shows breakdown)
+- List every task you skipped or got wrong
+- This feeds directly into Week 8's targeted review — don't skip the post-mortem
+
+**Why Day 5 of Week 7, not Week 8**: All 5 domains are covered by end of Week 6.
+Running the mock here gives a full week of targeted drilling before killer.sh.
 
 ---
 
 # WEEK 8 — Full Application Simulation
 
 ## Structure
-**Day 1-2: Systematic Foundation Review**
-- Day 1: Weeks 1-2 weak spots (pods, containers, workloads)
-- Day 2: Weeks 3-4 weak spots (configuration, networking)
+**Day 1-2: Targeted Review from Week 7 Mock Results**
+- Day 1: Drill the lowest-scoring domain from the Udemy mock
+- Day 2: Drill second-lowest domain + any individual tasks missed
 
-**Day 3-4: Advanced Application Review**
-- Day 3: Week 5-6 concepts (storage, advanced patterns)
-- Day 4: Week 7 concepts (integration tasks, speed optimization)
+**Day 3-4: Full-Stack Integration**
+- Day 3: Cross-domain scenarios covering all 5 domains
+- Day 4: Speed optimization — scaffold + refine cycle under time pressure
 
-**Day 5-7: Full Integration**
-- Day 5-7: End-to-end YAML-based application scenarios with maximum cross-domain mixing
-
-## Focus
-Full application lifecycle scenarios + YAML fluency validation + curriculum alignment
+**Day 5-7: killer.sh**
+- Day 5: **killer.sh Session 1** — official CKAD simulator bundled with exam purchase
+- Day 6: Review killer.sh results; drill lowest-scoring domain
+- Day 7: Final mixed scenarios based on killer.sh weak spots
 
 ## Requirements
-- Simulate real exam conditions with YAML-heavy focus
-- Must include variable task timing and cross-domain mixing
-- **NEW**: Cross-reference with official CKAD curriculum (cncf.io/certification/ckad)
-- **NEW**: Verify all domains covered at exam weights:
+- Simulate real exam conditions: remote desktop, timed, no outside resources
+- Multi-context navigation: `kubectl config use-context` between task clusters
+- Cross-reference with official CKAD curriculum; verify all domains covered:
   - Application Design and Build: 20%
   - Application Deployment: 20%
   - Application Observability and Maintenance: 15%
   - Application Environment, Configuration and Security: 25%
   - Services and Networking: 20%
-- **NEW**: Heavy kubectl explain usage simulation
+- **killer.sh is harder than the real exam by design** — treat score as a floor, not a ceiling
 
 ## Milestone
-- 2 full mock exams (Days 6-7) with variable task difficulty
-- ≥75% score with emphasis on YAML speed
-- Successfully manage time across mixed-complexity tasks
-- **NEW**: Validate YAML fluency across all resource types
-- **NEW**: Confirm kubectl explain speed and accuracy
+- Self-mock Day 5: ≥70%, all domains attempted
+- killer.sh Session 1: score recorded; target ≥60%
+- No single domain below 50% across mock results
+- Context switches executed without hesitation
 
 ---
 
 # WEEK 9 — Final Prep
 
 ## Focus
-Weak areas + speed + repetition + final validation
+Weak areas from Week 8 + speed refinement + final validation
 
 ## Requirements
 - No new content
-- Focus only on YAML speed refinement and cross-domain fluency
-- **NEW**: Final curriculum cross-check
-- **NEW**: Intensive YAML sprints on weakest resource types from Week 8
-- **NEW**: Maximum kubectl explain efficiency training
-- Practice variable-difficulty scenarios under time pressure
+- Drill the domain(s) where Week 8 score was weakest
+- Intensive Ingress + NetworkPolicy cold-write reps if either was weak
+- kubectl explain target: <15 seconds per lookup
+- Scaffold + refine cycle target: pod with probes + securityContext in <4 minutes
 
 ## Milestone
-- 1 full mock exam ≥80% with heavy YAML emphasis
+- **killer.sh Session 2** (Day 4-5): target ≥65%
+- 1 full mock exam ≥80%, all domains
 - Finish with ≥15 minutes remaining
-- Write 10 different YAML resource types from memory in <20 minutes
-- Complete complex cross-domain scenario in <45 minutes using kubectl explain strategically
 
 ---
 
