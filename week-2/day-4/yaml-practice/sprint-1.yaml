@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: api
+  name: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - image: nginx:1.21
+        name: nginx
+        readinessProbe:
+          initialDelaySeconds: 5
+          httpGet:
+            path: '/'
+            port: 80
+        resources:
+          limits:
+            cpu: 2
+            memory: 128Mi
+          requests:
+            cpu: 2
+            memory: 128Mi

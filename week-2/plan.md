@@ -63,47 +63,40 @@ Key gaps going in: Service YAML not practiced from memory, sidecar placement sti
 
 ---
 
-### Day 3 — Monday May 4 (75 min): Deployments — Updates + Rollbacks
+### Day 3 — Monday May 4 (75 min): Rolling Updates + Jobs + CronJobs ✅ DONE
 
-**Udemy** (25 min):
-- Rolling updates and rollbacks section
+> Originally "Deployments — Updates + Rollbacks" only. Day 3 file was pre-built to include Jobs + CronJobs, compressing two days into one.
 
-**YAML Speed Writing** (15 min):
-- Deployment + Service from memory — 2 full reps back to back
-
-**Mixed Tasks** (25 min):
-- Quick: Scale a Deployment to 5 replicas imperatively (`kubectl scale`)
-- Medium: Update a running Deployment's image and watch the rollout
-- Quick: Roll back a Deployment to the previous version
-
-**kubectl explain** (5 min):
-```bash
-kubectl explain deployment.spec.strategy
-kubectl explain deployment.spec.template
-```
+- Rolling updates: `set image`, `rollout status/history/undo`, `scale`
+- Jobs: `completions`, `parallelism`, `restartPolicy: Never/OnFailure`
+- CronJobs: `spec.schedule`, ownership chain (CronJob → Job → Pod)
+- Gap: CronJob schedule syntax (`0 * * * *` vs `0 0 * * *`) — noted in notes.md
+- Block 3b (stalled rollout recovery) deferred — circle back
 
 ---
 
-### Day 4 — Tuesday May 5 (75 min): Jobs + CronJobs
+### Day 4 — Tuesday May 5 (75 min): Blue/Green + Canary + ConfigMaps intro
 
-**Udemy** (25 min):
-- Jobs and CronJobs section
-- Focus: `spec.completions`, `spec.parallelism`, `spec.schedule`, restart behavior
+**Blue/Green** (20 min):
+- Two Deployments (`web-v1`, `web-v2`) with `version` label differentiating them
+- Single Service; traffic controlled by patching selector to `version: v1` or `version: v2`
+- Rollback = patch selector back
 
-**YAML Speed Writing** (15 min):
-- Job YAML from memory — 3 reps
-  - Job named `batch-job` running `busybox` that echoes "done" and exits
-- CronJob YAML from memory — 2 reps
-  - CronJob named `hourly-job`, schedule `0 * * * *`, same container
+**Canary** (15 min):
+- Stable + canary Deployments share `app=web` label
+- Service selects `app=web`; traffic split proportional to replica count
+- Promote by draining stable, scaling canary up
 
-**Mixed Tasks** (25 min):
-- Quick: Create a Job that runs `busybox` to echo a message and exits cleanly
-- Medium: Create a CronJob that runs every 5 minutes and prints the current date
+**ConfigMaps intro** (25 min):
+- Udemy: ConfigMaps section
+- `kubectl create configmap --from-literal` imperative form
+- `envFrom` + `configMapRef` — inject all keys as env vars
+- `env` + `valueFrom.configMapKeyRef` — inject single key
 
 **kubectl explain** (5 min):
 ```bash
-kubectl explain job.spec
-kubectl explain cronjob.spec.jobTemplate
+kubectl explain deployment.spec.template.spec.containers.envFrom
+kubectl explain deployment.spec.template.spec.containers.env
 ```
 
 ---
@@ -145,10 +138,13 @@ Record result in `week-2/milestone-results.md`.
 ## Week 2 Success Metrics
 
 By end of week:
-- [ ] Week 1 milestone passed (if not yet)
+- [x] Week 1 milestone passed
 - [ ] Write Deployment YAML from memory with correct `selector` + `template` label wiring
 - [ ] Write Job and CronJob YAML from memory
 - [ ] Execute a rolling update and rollback via `kubectl`
+- [ ] Implement blue/green traffic switch via Service selector patch
+- [ ] Implement canary split via shared label + replica ratio
+- [ ] Inject ConfigMap keys into a Deployment via `envFrom` and `valueFrom`
 - [ ] Complete Week 2 milestone in under 25 minutes
 
 ## Key Things to Lock In This Week
@@ -157,3 +153,22 @@ By end of week:
 2. **Deployment `selector.matchLabels` and `template.metadata.labels` must be identical**
 3. **Job vs CronJob**: Job runs once (or N times), CronJob schedules a Job on a cron schedule
 4. **`kubectl rollout`** commands: `status`, `history`, `undo`
+5. **Blue/green**: Service selector is the only lever — both Deployments always run
+6. **Canary**: shared label + replica ratio — no special K8s feature required
+7. **CronJob schedule syntax**: `0 * * * *` = hourly, `*/5 * * * *` = every 5 min
+
+## CKAD Plan Validation
+
+Week 2 maps to **Application Deployment (20%)** in the exam domain.
+
+| CKAD Plan Requirement | Status |
+|---|---|
+| Deployments + ReplicaSets | ✅ Day 2 |
+| Rolling updates + rollbacks | ✅ Day 3 |
+| Jobs + CronJobs | ✅ Day 3 |
+| Blue/green pattern | Day 4 |
+| Canary pattern | Day 4 |
+| Imperative kubectl mutations | ✅ Days 2–3, reinforced Day 4–5 |
+| ConfigMaps (intro) | Day 4 — pulled forward from Week 3; required for milestone Task 5 |
+
+> ConfigMaps are Week 3's primary focus. The intro here covers only env var injection. Volume mount pattern deferred to Week 3.

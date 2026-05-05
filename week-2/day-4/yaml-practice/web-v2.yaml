@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: web
+    version: "1.1"
+  name: web-v1-1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+      version: "1.1"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: web
+        version: "1.1"
+    spec:
+      containers:
+      - image: nginx:1.22
+        name: nginx
+        ports:
+          - containerPort: 80
+
