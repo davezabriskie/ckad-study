@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "0 0 * * *"
+  jobTemplate:
+    metadata:
+      name: clean-up-cron
+      labels:
+        clean: you-bet
+    spec:
+      parallelism: 1
+      completions: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - image: busybox
+              name: deletor
+              command: ['sh', '-c', 'echo "Deleting it all, Jim."; rm -rf /tmp/*; echo "it is all gone ..."']

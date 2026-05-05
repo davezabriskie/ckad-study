@@ -17,6 +17,12 @@
 - **Job**: runs a pod to completion (once, or N times via `spec.completions`)
 - **CronJob**: schedules a Job on a cron schedule via `spec.schedule`
 - Job pods don't restart on success — `restartPolicy: Never` or `OnFailure`
+- `restartPolicy: Never` = new pod on failure; `OnFailure` = restart container in-place on same pod
+- `parallelism` is silently capped at `completions` — setting it higher is harmless but misleading
+- `jobTemplate.metadata.name` in a CronJob is ignored — controller auto-generates job names per trigger
+- CronJob schedule: `0 * * * *` = every hour, `0 0 * * *` = midnight daily
+- Update CronJob schedule: `kubectl patch cronjob <name> -p '{"spec":{"schedule":"..."}}'` or `kubectl edit`
+- Set rollout change-cause: `kubectl annotate deployment/<name> kubernetes.io/change-cause="message"`
 
 ## kubectl Commands for Week 2
 
@@ -56,9 +62,13 @@ kubectl get cronjobs
   - ReplicaSet adoption of orphaned pods — Deployments don't co-opt pre-existing pods, only RS can adopt orphans and it's unreliable
 
 ### Day 3 (Monday May 4)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+- YAML Speed: sprint-1 (Deployment + probe) clean, sprint-2 (Deployment + Recreate) clean
+- Tasks Completed: block4 (3 Job reps), block5 (CronJob), block6 (data-load Job)
 - Areas to improve:
+  - CronJob schedule syntax — wrote `0 0 * * *` (daily) instead of `0 * * * *` (hourly)
+  - `jobTemplate.metadata.name` is ignored by CronJob controller — don't set it
+  - `parallelism > completions` is silently capped — semantically wrong even if it works
+  - Block 3b (bad rollout recovery) deferred — circle back
 
 ### Day 4 (Tuesday May 5)
 - YAML Speed: _____ reps clean

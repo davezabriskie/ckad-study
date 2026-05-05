@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-load
+  labels:
+    data: load
+    load: data
+spec:
+  completions: 3
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - image: busybox
+          name: logger
+          command: ['sh', '-c', 'for i in 1 2 3; do echo $i; done']

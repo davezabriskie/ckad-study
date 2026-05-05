@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job-parallel
+spec:
+  parallelism: 2
+  completions: 4
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: parallel-worker
+          image: busybox
+          command: ['sh', '-c', 'echo "$(date) -> quitting time"']
