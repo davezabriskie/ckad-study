@@ -24,6 +24,22 @@
 - Update CronJob schedule: `kubectl patch cronjob <name> -p '{"spec":{"schedule":"..."}}'` or `kubectl edit`
 - Set rollout change-cause: `kubectl annotate deployment/<name> kubernetes.io/change-cause="message"`
 
+### Blue/Green + Canary
+- **Blue/green**: two Deployments share `app` label, differentiated by `version` label; Service selector switches between them via `kubectl patch`
+- Service selector must include BOTH `app` and `version` — selecting only `version` is too loose
+- `strategy: Recreate` is wrong for blue/green — use default `RollingUpdate` so each Deployment stays healthy
+- **Canary**: stable + canary share same `app` label; Service selects shared label; traffic split by replica ratio
+- Promote canary: scale stable to 0, scale canary up
+
+### ConfigMaps
+- Key/value store decoupled from the pod — change config without rebuilding images
+- `envFrom` + `configMapRef` — inject all keys; env var names come from ConfigMap keys
+- `env` + `valueFrom.configMapKeyRef` — inject one key; you control the env var name
+- `restartPolicy: Never` is NOT valid on init containers — remove it
+- Verify injection: `kubectl exec deploy/<name> -- env | grep KEY`
+- `kubectl explain` path: `pod.spec.containers.envFrom.configMapRef` (note: no "Key" in name)
+- Easy mixup: `configMapRef` (envFrom) vs `configMapKeyRef` (valueFrom) — different field names
+
 ## kubectl Commands for Week 2
 
 ```bash
@@ -39,6 +55,18 @@ kubectl rollout undo deployment/web
 kubectl create job batch --image=busybox -- echo done
 kubectl get jobs
 kubectl get cronjobs
+
+# ConfigMap
+kubectl create configmap app-cfg --from-literal=ENV=prod --from-literal=LOG_LEVEL=warn
+kubectl describe configmap app-cfg
+
+# Blue/green traffic switch
+kubectl patch service web-svc -p '{"spec":{"selector":{"version":"v2"}}}'
+kubectl get endpoints web-svc
+
+# Debug no-endpoints
+kubectl get pods --show-labels
+kubectl describe service <name>
 ```
 
 ## Daily Progress Tracking
@@ -71,9 +99,15 @@ kubectl get cronjobs
   - Block 3b (bad rollout recovery) deferred — circle back
 
 ### Day 4 (Tuesday May 5)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+- Blocks completed: 0 (scaffold sprint), 1 (blue/green), 3/4 (ConfigMaps — no Udemy access, used kubectl explain instead)
+- Scaffold sprint: Deployment + readinessProbe clean, Job clean
+- Blue/green: built and wired; debugged empty endpoints (version selector mismatch) — resolved
+- ConfigMaps: configmap-1.yaml clean, envFrom (app.yaml) and valueFrom (app-log-only.yaml) both working
 - Areas to improve:
+  - `configMapRef` vs `configMapKeyRef` naming — easy to mix under pressure
+  - `restartPolicy: Never` not valid on init containers
+  - Service selector needs both `app` + `version` keys, not just `version`
+  - Scaffold noise (`strategy: {}`, `resources: {}`, `status: {}`) — strip before applying
 
 ### Day 5 (Wednesday May 6)
 - YAML Speed: _____ reps clean
