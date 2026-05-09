@@ -35,7 +35,9 @@
 - Key/value store decoupled from the pod — change config without rebuilding images
 - `envFrom` + `configMapRef` — inject all keys; env var names come from ConfigMap keys
 - `env` + `valueFrom.configMapKeyRef` — inject one key; you control the env var name
-- `restartPolicy: Never` is NOT valid on init containers — remove it
+- `restartPolicy: Never` is NOT valid on init containers — `restartPolicy` is a pod-level field, not per-container
+- Exception: K8s 1.28+ allows `restartPolicy: Always` on init containers to make them sidecars — `Never` is still invalid
+- `$(VAR_NAME)` in an env `value` field references another env var in the same container spec (dependent variable substitution)
 - Verify injection: `kubectl exec deploy/<name> -- env | grep KEY`
 - `kubectl explain` path: `pod.spec.containers.envFrom.configMapRef` (note: no "Key" in name)
 - Easy mixup: `configMapRef` (envFrom) vs `configMapKeyRef` (valueFrom) — different field names
@@ -109,10 +111,14 @@ kubectl describe service <name>
   - Service selector needs both `app` + `version` keys, not just `version`
   - Scaffold noise (`strategy: {}`, `resources: {}`, `status: {}`) — strip before applying
 
-### Day 5 (Wednesday May 6)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+### Day 5 (Friday May 8)
+- Blocks completed: 0 (scaffold sprint), 1 (full-stack ConfigMap+Deployment+Service), 2 (rollout/rollback), extra ConfigMap + CronJob reps
+- Scaffold sprint: all three resource types clean
+- Full-stack: ConfigMap + Deployment (envFrom) + Service wired and env vars verified
+- Extra reps: envFrom, valueFrom (with rename + dependent variable substitution), CronJob — all clean
+- CronJob notably cleaner than Day 3 — schedule syntax correct
 - Areas to improve:
+  - `restartPolicy: Never` on init containers keeps appearing — pod-level only, remove it
 
 ### Day 6 (Saturday May 9) — Milestone
 - Milestone Result: PASS / FAIL
