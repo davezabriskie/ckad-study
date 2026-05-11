@@ -135,6 +135,7 @@ Complete mixed workload set in **25-minute flexible window**:
 ---
 
 # WEEK 3 — Application Configuration + Deployment Tooling
+## Status: IN PROGRESS (Day 1)
 
 ## Weekly Review (10 min)
 **Scaffold Sprint**: Generate 3 resource types imperatively + add one non-default field each
