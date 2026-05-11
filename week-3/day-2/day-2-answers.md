@@ -87,6 +87,48 @@ spec:
 
 **Key difference from ConfigMap volume**: field is `secret.secretName` not `configMap.name`.
 
+### Rep 4: Secret from file + volume mount
+
+```bash
+# generate cert + key
+openssl req -x509 -newkey rsa:2048 -nodes -keyout tls.key -out tls.crt -days 1 -subj "/CN=test"
+
+# create secret — kubectl reads file contents and base64-encodes them
+kubectl create secret generic tls-secret --from-file=tls.crt --from-file=tls.key
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tls-app
+  labels:
+    app: tls-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tls-app
+  template:
+    metadata:
+      labels:
+        app: tls-app
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.21
+          volumeMounts:
+            - name: tls-vol
+              mountPath: /etc/tls
+              readOnly: true
+      volumes:
+        - name: tls-vol
+          secret:
+            secretName: tls-secret
+```
+
+**Note**: For real TLS Ingress use `kubectl create secret tls` (different subcommand) which creates a `kubernetes.io/tls` typed Secret. Generic from-file works for any file-based Secret content.
+
 ---
 
 ## Block 4 — Full Stack Reference

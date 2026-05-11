@@ -4,7 +4,7 @@
 
 ---
 
-## Milestone Assessment (30 min)
+## Milestone Assessment (38 min)
 
 **Rules**: Timed. No notes. 3-minute skip rule per task. 15-second interpretation phase before writing anything.
 

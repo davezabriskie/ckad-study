@@ -62,7 +62,8 @@ Work through the following tasks. Check against `day-3-answers.md` → Block 3 i
 Install `bitnami/nginx` as release `staging` with `replicaCount=1`. Then upgrade it to `replicaCount=2` using `helm upgrade --install` (not `helm upgrade`). What's the difference?
 
 ### Medium
-Install `bitnami/nginx` as release `prod`. Override `replicaCount=3` and write a `values.yaml` file with that value, then reinstall using `-f values.yaml` instead of `--set`. Verify the result is the same.
+Install `bitnami/nginx` as release `prod`. Override `replicaCount=3` using `--set`.
+Then write a `values.yaml` file with `replicaCount=3` and update the release using `helm upgrade --install -f values.yaml` instead of `--set`. Verify the result is the same.
 
 ---
 

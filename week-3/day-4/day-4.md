@@ -52,7 +52,7 @@ Work through the following. Check against `day-4-answers.md` → Block 3 if stuc
 **Step 1**: Write `base/kustomization.yaml` that includes both files. Apply with `kubectl apply -k base/`.
 
 **Step 2**: Create `overlays/prod/kustomization.yaml` that:
-- References the base (`../../base` or `../base`)
+- References the base via `resources: [../../base]` (from `overlays/prod/` you go up two directories)
 - Adds `commonLabels: env: prod`
 - Sets `namePrefix: prod-`
 - Patches the image to `nginx:1.22`

@@ -65,7 +65,7 @@ See `day-6/day-6.md`. Results → `week-3/milestone-results.md`.
 - [ ] Mount Secret as a volume
 - [ ] `helm install` + value override + verify + `helm uninstall`
 - [ ] `kubectl apply -k` from an overlay directory
-- [ ] Complete Week 3 milestone in under 30 minutes
+- [ ] Complete Week 3 milestone in under 38 minutes
 
 ## CKAD Plan Validation
 

@@ -57,6 +57,8 @@ spec:
       containers:
         - name: nginx
           image: nginx:1.21
+          ports:
+            - containerPort: 80
           volumeMounts:
             - name: nginx-config
               mountPath: /etc/nginx/conf.d
@@ -66,7 +68,9 @@ spec:
             name: nginx-cfg
 ```
 
-### Rep 2: app-settings — volume mount + env var in same Deployment
+**Note**: Mounting at `/etc/nginx/conf.d` overwrites the default nginx config. The `default.conf` key in the ConfigMap becomes the file `/etc/nginx/conf.d/default.conf` inside the container.
+
+### Rep 2: subPath — mount one key as a single file
 
 ```yaml
 apiVersion: v1
@@ -74,8 +78,10 @@ kind: ConfigMap
 metadata:
   name: app-settings
 data:
+  app.conf: |
+    log_level=warn
+    workers=4
   LOG_LEVEL: warn
-  MAX_CONN: "100"
 ```
 
 ```yaml
@@ -106,12 +112,19 @@ spec:
                   key: LOG_LEVEL
           volumeMounts:
             - name: settings-vol
-              mountPath: /etc/settings
+              mountPath: /etc/app/app.conf
+              subPath: app.conf
       volumes:
         - name: settings-vol
           configMap:
             name: app-settings
 ```
+
+**Without `subPath`**: mounting at `/etc/app/app.conf` would mount the whole ConfigMap as a directory, hiding anything else under `/etc/app`.
+
+**With `subPath: app.conf`**: only that one key is projected as a single file at the given path. The rest of `/etc/app` is untouched.
+
+**Gotcha**: `subPath` mounts do NOT auto-update when the ConfigMap changes. Regular volume mounts do. If you need live updates, use a regular mount with a subdirectory instead.
 
 **Key facts**:
 - `volumes` is at `spec.template.spec` level (pod spec), not container level

@@ -24,7 +24,7 @@ Save to `yaml-practice/sprint-{1,2,3}.yaml`. Apply all three.
 
 **Prompt B**: "Mount a Secret named `tls-secret` into a pod at `/etc/tls`"
 
-**Prompt C**: "Create a Deployment that injects a ConfigMap via envFrom and a single Secret key as an env var"
+**Prompt C**: "Create a Deployment that injects all keys from a ConfigMap and a single key from a Secret as env vars"
 
 Check against `day-2-answers.md` → Block 1.
 
@@ -39,6 +39,13 @@ Watch the **Secrets** section. Focus on:
 - `kubectl create secret generic` handles encoding automatically
 - Field name swaps vs ConfigMap: `secretKeyRef`, `secretRef`
 - Volume mount works identically to ConfigMap
+
+### `stringData` vs `data` (know cold)
+
+- `data:` — values must be base64 encoded. Read back returns the encoded form.
+- `stringData:` — values are plain text. kubectl base64-encodes them on apply. Read back always returns `data:` (encoded).
+
+Use `stringData` when writing YAML by hand to skip the encoding step. Use `data` if you've already encoded values (e.g. piping from another tool).
 
 ---
 
@@ -62,6 +69,22 @@ Verify rep 3:
 ```bash
 kubectl exec deploy/db-client-vol -- ls /etc/db-creds
 kubectl exec deploy/db-client-vol -- cat /etc/db-creds/username
+```
+
+**Rep 4 — Secret from file (TLS pattern)**: Generate a self-signed TLS cert + key pair, then create a Secret from those files. This is the realistic exam scenario.
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -keyout tls.key -out tls.crt -days 1 -subj "/CN=test"
+kubectl create secret generic tls-secret --from-file=tls.crt --from-file=tls.key
+kubectl describe secret tls-secret   # should show both keys
+```
+
+Mount it into a Deployment `tls-app` at `/etc/tls`. Save to `yaml-practice/tls-app.yaml`.
+
+Verify:
+```bash
+kubectl exec deploy/tls-app -- ls /etc/tls
+kubectl exec deploy/tls-app -- cat /etc/tls/tls.crt | head -3
 ```
 
 Check against `day-2-answers.md` → Block 3.

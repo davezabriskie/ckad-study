@@ -52,14 +52,17 @@ Watch the **ConfigMaps** volume mount section. Focus on:
 
 Save ConfigMap to `yaml-practice/nginx-cfg.yaml`, Deployment to `yaml-practice/web-server.yaml`.
 
-**Rep 2**: Create ConfigMap `app-settings` with two keys: `LOG_LEVEL=warn` and `MAX_CONN=100`. Mount into Deployment `app` at `/etc/settings` (both keys become files). Also inject `LOG_LEVEL` as an env var via `valueFrom` in the same Deployment.
+**Rep 2 — `subPath` pattern**: Create ConfigMap `app-settings` with two keys: `app.conf` (any content) and `LOG_LEVEL=warn`. Mount **only `app.conf`** into Deployment `app` at `/etc/app/app.conf` using `subPath` — without overwriting the entire `/etc/app` directory. Also inject `LOG_LEVEL` as an env var via `valueFrom` in the same Deployment.
 
 Save to `yaml-practice/app-settings-cm.yaml` and `yaml-practice/app-deploy.yaml`.
 
+`subPath` is critical: without it, mounting at `/etc/app/app.conf` would mount the whole ConfigMap as a directory. With `subPath: app.conf`, only that one key is mounted as a single file, preserving anything else in `/etc/app`.
+
 Verify:
 ```bash
-kubectl exec deploy/app -- ls /etc/settings
-kubectl exec deploy/app -- cat /etc/settings/LOG_LEVEL
+kubectl exec deploy/app -- ls /etc/app
+kubectl exec deploy/app -- cat /etc/app/app.conf
+kubectl exec deploy/app -- env | grep LOG_LEVEL
 ```
 
 Check against `day-1-answers.md` → Block 3.
