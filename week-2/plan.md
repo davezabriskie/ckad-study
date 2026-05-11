@@ -139,13 +139,13 @@ Record result in `week-2/milestone-results.md`.
 
 By end of week:
 - [x] Week 1 milestone passed
-- [ ] Write Deployment YAML from memory with correct `selector` + `template` label wiring
-- [ ] Write Job and CronJob YAML from memory
-- [ ] Execute a rolling update and rollback via `kubectl`
-- [ ] Implement blue/green traffic switch via Service selector patch
-- [ ] Implement canary split via shared label + replica ratio
-- [ ] Inject ConfigMap keys into a Deployment via `envFrom` and `valueFrom`
-- [ ] Complete Week 2 milestone in under 25 minutes
+- [x] Write Deployment YAML from memory with correct `selector` + `template` label wiring
+- [x] Write Job and CronJob YAML from memory
+- [x] Execute a rolling update and rollback via `kubectl`
+- [x] Implement blue/green traffic switch via Service selector patch
+- [x] Implement canary split via shared label + replica ratio
+- [x] Inject ConfigMap keys into a Deployment via `envFrom` and `valueFrom`
+- [x] Complete Week 2 milestone in under 35 minutes (target adjusted — 6 tasks vs original 5)
 
 ## Key Things to Lock In This Week
 

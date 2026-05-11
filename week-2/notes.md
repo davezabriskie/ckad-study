@@ -120,8 +120,13 @@ kubectl describe service <name>
 - Areas to improve:
   - `restartPolicy: Never` on init containers keeps appearing — pod-level only, remove it
 
-### Day 6 (Saturday May 9) — Milestone
-- Milestone Result: PASS / FAIL
-- Tasks Completed: ____/5
-- Total Time: _____ min
+### Day 6 (Sunday May 10) — Milestone
+- Milestone Result: PASS
+- Tasks Completed: 6/6
+- Total Time: ~30 min (target 35 min)
 - Areas to improve:
+  - CronJob schedule syntax (`*/5` vs `5`) — third occurrence, carry into Week 3
+  - Service imperative scaffold — fumbled `kubectl create service clusterip` syntax
+  - liveness vs readiness probe — reaching for wrong one under pressure
+  - `Pod.spec.containers` plural — typo in explain path cost time
+- See `week-2/milestone-results.md` for full assessment

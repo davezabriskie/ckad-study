@@ -18,7 +18,7 @@ This repository contains my 9-week study plan and practice materials for the Cer
 ## Weekly Progress
 
 - [X] Week 1 - Core Application Concepts
-- [ ] Week 2 - Workload Management (in progress)
+- [X] Week 2 - Workload Management (complete)
 - [ ] Week 3 - Application Configuration
 - [ ] Week 4 - Networking & Services
 - [ ] Week 5 - Persistence & Storage

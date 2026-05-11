@@ -86,7 +86,7 @@ probes, command/args overrides, basic debugging
 ---
 
 # WEEK 2 — Workload Management + Deployment Strategies
-## Status: IN PROGRESS (Day 2)
+## Status: COMPLETE
 
 ## Focus
 Deployments, ReplicaSets, Jobs, CronJobs, rolling updates, rollbacks,
