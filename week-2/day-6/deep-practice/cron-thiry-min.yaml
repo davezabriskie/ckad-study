@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: thirty-min
+spec:
+  jobTemplate:
+    metadata:
+      name: thirty-min
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: busybox
+            name: thirty-min
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: '*/30 * * * *'
+status: {}

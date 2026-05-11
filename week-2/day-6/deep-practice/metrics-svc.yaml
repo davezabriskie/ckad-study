@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: metrics-svc
+  name: metrics-svc
+spec:
+  ports:
+  - name: 9090-9090
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: metrics-svc
+  type: ClusterIP
+status:
+  loadBalancer: {}

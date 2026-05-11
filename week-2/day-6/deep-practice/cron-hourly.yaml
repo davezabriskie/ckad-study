@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hourly
+spec:
+  jobTemplate:
+    metadata:
+      name: hourly
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: redis:7.2
+            name: hourly
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: 0 * * * *
+status: {}

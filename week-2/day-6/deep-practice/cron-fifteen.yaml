@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fifteen
+spec:
+  jobTemplate:
+    metadata:
+      name: fifteen
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: nginx:1.21
+            name: fifteen
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: '*/15 * * * *'
+status: {}

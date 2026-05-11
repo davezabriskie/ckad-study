@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+spec:
+  parallelism: 1
+  completions: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: init
+          image: busybox
+          command: ['sh', '-c', 'echo "database initialized"']

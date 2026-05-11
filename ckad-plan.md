@@ -48,6 +48,13 @@ Kubernetes for the Absolute Beginners + CKAD with Practice Tests (Mumshad Mannam
 - **Week 4+**: 30% cross-domain tasks minimum
 - **Weekly reviews**: Focus on scaffold speed and refinement accuracy
 
+## Milestone Results Convention
+- Every week with a milestone assessment generates a `week-N/milestone-results.md` file
+- The day-6 (or milestone day) file references it but does not duplicate it
+- Results file contains: pass/fail, total time, per-task timing + assessment, gaps to carry forward, what's solid
+- Gaps listed in milestone-results.md feed directly into the following week's plan
+- Deep practice after the milestone does NOT update the results file — gap closure is tracked in notes.md per-day
+
 Core tools:
 - **kubectl --dry-run=client -o yaml** (primary generation technique)
 - **Manual YAML editing** in vim — adding fields the generator doesn't produce

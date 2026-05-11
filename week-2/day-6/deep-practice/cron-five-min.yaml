@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: five-min
+spec:
+  jobTemplate:
+    metadata:
+      name: five-min
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: busybox
+            command: ['sh', '-c', 'echo I Live']
+            name: five-min
+          restartPolicy: OnFailure
+  schedule: '*/5 * * * *'
+status: {}

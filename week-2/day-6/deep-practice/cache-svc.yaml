@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cache-svc
+  name: cache-svc
+spec:
+  ports:
+  - name: 1111-6379
+    port: 1111
+    protocol: TCP
+    targetPort: 6379
+  selector:
+    app: cache-svc
+  type: ClusterIP
+status:
+  loadBalancer: {}

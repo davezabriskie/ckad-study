@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: monday-morning
+spec:
+  jobTemplate:
+    metadata:
+      name: monday-morning
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: busybox
+            name: monday-morning
+            resources: {}
+          restartPolicy: OnFailure
+  schedule: 0 9 1 * *
+status: {}

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app
+  name: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      initContainers:
+        - image: busybox
+          name: checker
+          command: ['sh', '-c', 'env']
+          restartPolicy: Never
+          env:
+            - name: SOMETHING_DIFFERENT
+              valueFrom:
+                configMapKeyRef:
+                  key: LOG_LEVEL
+                  name: app-cfg
+      containers:
+        - image: nginx:1.21
+          name: nginx
+          env:
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  key: LOG_LEVEL
+                  name: app-cfg

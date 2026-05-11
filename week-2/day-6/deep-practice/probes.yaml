@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probing
+  labels:
+    practicing: probes
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: probe
+  template:
+    metadata:
+      labels:
+        app: probe
+    spec:
+      containers:
+        - image: nginx:1.21
+          name: nginx
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            initialDelaySeconds: 15
+            httpGet:
+              path: '/'
+              port: 80
+          livenessProbe:
+            exec:
+              command: ['sh', '-c', 'exit 1']
+
