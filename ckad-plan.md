@@ -251,32 +251,57 @@ spec:
   - Ingress
 ```
 
+## Observability Commands (NEW — addressing 15% domain gap)
+Pair with debugging workflows. Day 3 or Day 4 should include a dedicated 30-min block:
+
+```bash
+# Logs — depth beyond `kubectl logs <pod>`
+kubectl logs <pod> -c <container>           # multi-container pod
+kubectl logs <pod> --previous                # last restart's logs
+kubectl logs <pod> -f                        # stream
+kubectl logs <pod> --tail=50 --since=10m     # filtering
+
+# Resource monitoring (metrics-server required)
+kubectl top pods
+kubectl top nodes
+kubectl top pods --sort-by=cpu
+
+# Event inspection — primary tool for "what just happened"
+kubectl get events --sort-by=.lastTimestamp
+kubectl get events --field-selector type=Warning
+kubectl describe pod <pod>   # Events section at the bottom
+```
+
+The exam tests these as part of debugging tasks ("why is this pod not running") — knowing the command flags cold saves time over `kubectl explain` lookups.
+
 ## Mixed task types (VARIABLE DIFFICULTY)
 - **Quick**: Write a ClusterIP service; write a basic Ingress
 - **Medium**: Ingress + TLS (add Secret reference); NetworkPolicy allowing specific pod traffic
 - **Complex**: Full connectivity debug — broken service, wrong selector, missing endpoint
 - **Cross-domain**: NetworkPolicy + Deployment + Service + ConfigMap (full isolated app stack)
+- **Observability**: Find a failing pod using only `kubectl get events` and `kubectl logs --previous` — no other hints
 
 ## Milestone
-Complete networking mix in **25-minute flexible window**:
+Complete networking + observability mix in **25-minute flexible window**:
 - 2 quick tasks (service + Ingress, written cold)
 - 2 medium cross-domain combinations
 - 1 complex connectivity debugging scenario (fix broken access, no hints on what's wrong)
 - 1 NetworkPolicy written cold (specific ingress/egress rule)
+- 1 observability task (identify cause of failure using logs/events/top only)
 
 ## Exam Domain Mapping
 - Services and Networking (20%): Services, Ingress, NetworkPolicies
-- Application Observability and Maintenance (15%): debugging workflows, logs
+- Application Observability and Maintenance (15%): debugging workflows, logs, monitoring commands
 
 ---
 
-# WEEK 5 — Storage + Resource Management
+# WEEK 5 — Storage + Resource Management + Container Images
 
 ## Weekly Review (15 min)
 **Mixed Sprint**: Scaffold pod + deployment + service; write one Ingress and one NetworkPolicy cold
 
 ## Focus
-Volumes, PVC/PV, StatefulSets, resource requests/limits, ResourceQuota, LimitRange
+Volumes (persistent + ephemeral), PVC/PV, StatefulSets, resource requests/limits, ResourceQuota, LimitRange, container image build/modify
 
 ## Requirements
 - **Scaffold + refine**: Generate pod scaffold, add volume/PVC fields manually
@@ -287,22 +312,35 @@ Volumes, PVC/PV, StatefulSets, resource requests/limits, ResourceQuota, LimitRan
   - `resources.requests` and `resources.limits` in pod specs (CPU + memory)
   - ResourceQuota at namespace level
   - LimitRange: default requests/limits per container
+- **Ephemeral volumes (NEW — addressing Application Design gap)**:
+  - `emptyDir` — pod-lifetime scratch space, also memory-backed (`medium: Memory`)
+  - `downwardAPI` — expose pod metadata (labels, annotations, fields) as files
+  - `projected` — combine ConfigMap + Secret + downwardAPI + ServiceAccount token into one volume
+- **Container image build/modify (NEW — addressing Application Design gap, ~30 min block)**:
+  - Dockerfile basics: `FROM`, `RUN`, `COPY`, `CMD`, `ENTRYPOINT`, `EXPOSE`
+  - Build: `docker build -t myimage:tag .`
+  - Difference between `CMD` and `ENTRYPOINT` — and how Kubernetes pod `command`/`args` override them
+  - Modify an existing Dockerfile, rebuild, push (or `kind load` / `minikube image load` for local clusters)
+  - Run the new image in a Pod scaffold
 - kubectl explain for storage and resource spec fields
 
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Scaffold pod + add volume mount; add resource limits to existing Deployment
-- **Medium**: StatefulSet + PVC combination with headless service
+- **Quick**: Scaffold pod + add volume mount; add resource limits to existing Deployment; add an `emptyDir` to a pod
+- **Medium**: StatefulSet + PVC combination with headless service; pod with `downwardAPI` exposing pod name as a file
 - **Complex**: Multi-container pod + multiple volume types + resource constraints + NetworkPolicy
 - **Cross-domain**: StatefulSet + service + configmap + ResourceQuota
+- **Image build**: Modify a provided Dockerfile (e.g. change base image or entrypoint), rebuild, run in a pod
 
 ## Milestone
-Complete storage + resource mix in **25-minute flexible window**:
+Complete storage + resource + image mix in **30-minute flexible window**:
 - 2 quick tasks (PVC scaffold + resource limits)
-- 2 medium cross-domain combinations
+- 1 ephemeral volume task (`emptyDir` or `downwardAPI`)
+- 1 medium cross-domain combination
 - 1 complex stateful application scenario with resource constraints
+- 1 image task (modify Dockerfile + rebuild + run)
 
 ## Exam Domain Mapping
-- Application Design and Build (20%): persistent and ephemeral volumes
+- Application Design and Build (20%): persistent + ephemeral volumes, container image build/modify
 - Application Environment, Configuration and Security (25%): resource requests, limits, quotas
 
 ---
@@ -352,6 +390,15 @@ RBAC and SecurityContexts appear in most complex exam scenarios.
 - ServiceAccount: create and mount to a pod (`spec.serviceAccountName`)
 - Debug Forbidden: `kubectl auth can-i <verb> <resource> --as=system:serviceaccount:<ns>:<sa>`
 
+## Admission Control Awareness (NEW — addressing Config/Security gap, ~15 min)
+- Admission controllers run after authentication/authorization, before persistence — they can reject or mutate requests
+- Common ones that affect CKAD scenarios:
+  - **ResourceQuota** — enforces namespace-level quotas (already covered in Week 5)
+  - **LimitRanger** — applies default requests/limits when missing (already covered in Week 5)
+  - **NamespaceLifecycle** — prevents creating resources in terminating namespaces
+- Scope for exam: recognize when an admission controller is rejecting a request (e.g. "exceeded quota" errors), not configure them
+- Quick drill: create a pod that violates a ResourceQuota, observe the rejection message
+
 ## Mixed task types (VARIABLE DIFFICULTY)
 - **Quick**: Add SecurityContext to generated pod scaffold; create ServiceAccount
 - **Medium**: Role + RoleBinding + ServiceAccount wired to a Deployment
@@ -393,15 +440,64 @@ Mixed domain atomic tasks, speed optimization, debugging workflows at full compl
 - PVC stuck Pending: StorageClass mismatch or no available PV
 - Probe failing: wrong port or path causing container restart loop
 
+## Integration Topics (NEW — addressing remaining curriculum gaps)
+
+### DaemonSet (Application Design and Build, 20% domain)
+~30 min block. Workload resource for running one pod per node — system agents, log collectors, network plugins.
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-agent
+spec:
+  selector:
+    matchLabels:
+      app: log-agent
+  template:
+    metadata:
+      labels:
+        app: log-agent
+    spec:
+      containers:
+        - name: agent
+          image: busybox
+          command: ['sh', '-c', 'tail -f /var/log/syslog']
+```
+
+Key facts:
+- No `replicas` field — one pod per matching node, scheduler-driven
+- `nodeSelector` or `affinity` controls which nodes get the pod
+- Tolerations often needed to run on tainted nodes (e.g. control plane)
+
+### API Deprecations (Observability and Maintenance, 15% domain)
+~20 min block. The exam may give you a manifest using a deprecated API and ask you to migrate it.
+
+```bash
+# Check what's available
+kubectl api-versions
+
+# Common deprecated → current migrations:
+# extensions/v1beta1 Deployment        → apps/v1 Deployment
+# extensions/v1beta1 Ingress           → networking.k8s.io/v1 Ingress
+# policy/v1beta1 PodSecurityPolicy     → removed (Pod Security Admission instead)
+# autoscaling/v2beta2 HPA              → autoscaling/v2 HPA
+
+# Convert a manifest
+kubectl convert -f old-manifest.yaml --output-version apps/v1   # if kubectl-convert installed
+```
+
+Drill: take a deprecated manifest, identify what to change, apply the migrated version.
+
 ## Mixed task types (VARIABLE DIFFICULTY)
-- **Quick**: Fix a broken resource (single issue, no hints)
-- **Medium**: Three-domain scaffold + refine + verify running
+- **Quick**: Fix a broken resource (single issue, no hints); DaemonSet from scaffold
+- **Medium**: Three-domain scaffold + refine + verify running; migrate a deprecated API manifest
 - **Complex**: Four-domain end-to-end (stateful app + networking + security + config)
 - **Break/fix**: Broken application, multiple issues, no guidance on what's wrong
 
 ## Milestone
-Complete integration challenge in **30-minute flexible window**:
-- 2 quick single-domain tasks
+Complete integration challenge in **35-minute flexible window**:
+- 2 quick single-domain tasks (one of which is DaemonSet or API migration)
 - 3 medium cross-domain combinations (2-3 domains each)
 - 1 complex end-to-end application (4+ domains, all verified running)
 - 1 break/fix scenario with no hints
