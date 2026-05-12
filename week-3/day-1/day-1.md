@@ -8,9 +8,9 @@
 
 ## Block 0 — Scaffold + Refine Sprint (15 min)
 
-Three reps, back to back. No notes.
+Three reps, back to back. No notes. Target ~5 min per rep.
 
-1. Deployment `web`, image `nginx:1.21`, 2 replicas, label `app=web`. Add a **readinessProbe** (httpGet, path `/`, port 80, `initialDelaySeconds: 5`) and resource requests + limits.
+1. Deployment `web`, image `nginx:1.21`, 2 replicas, label `app=web`. Add a **readinessProbe** (httpGet, path `/`, port 80, `initialDelaySeconds: 5`) and resources (`requests: cpu: 100m, memory: 128Mi` / `limits: cpu: 250m, memory: 256Mi`).
 2. ClusterIP Service `web-svc` targeting `app=web` on port 80 — imperative scaffold only, no manual YAML.
 3. CronJob `log-rotate` that runs **every 6 hours**, image `busybox`, command `echo rotate`.
 
@@ -26,7 +26,7 @@ Save to `yaml-practice/sprint-{1,2,3}.yaml`. Apply all three.
 
 **Prompt A**: "Create a ConfigMap from a file called `app.properties` and mount it into a pod at `/etc/app`"
 
-**Prompt B**: "Inject a single Secret key `DB_PASS` into a Deployment as an env var named `DATABASE_PASSWORD`"
+**Prompt B**: "Inject a single ConfigMap key `LOG_LEVEL` into a Deployment as an env var named `APP_LOG_LEVEL`"
 
 **Prompt C**: "Create a ConfigMap with key `ENV=staging` and inject all keys into a Deployment"
 
@@ -82,7 +82,7 @@ Scaffold a Deployment `backend`, image `nginx:1.21`, 2 replicas. Add:
 - A **readinessProbe** httpGet on path `/` port 80
 - Resource requests `cpu: 100m, memory: 64Mi`
 
-Check against `day-1-answers.md` → Block 4.
+Save to `yaml-practice/backend.yaml`. Check against `day-1-answers.md` → Block 4.
 
 ---
 
@@ -101,9 +101,47 @@ kubectl explain pod.spec.containers.volumeMounts
 ## End-of-Session Checklist
 
 Fill in `week-3/notes.md` Day 1 tracking:
-- [ ] Scaffold sprint: readinessProbe correct (not liveness)? CronJob schedule correct?
-- [ ] Service scaffold: imperative command from memory without fumbling?
-- [ ] Volume mount pattern: both reps clean?
-- [ ] `--from-file` understood — key name = filename?
-- [ ] Mixed tasks completed?
-- [ ] Areas to improve?
+- [x] Scaffold sprint: readinessProbe correct (not liveness)? CronJob schedule correct? — probe ✓, schedule slip (`*/6` vs `0 */6`)
+- [x] Service scaffold: imperative command from memory without fumbling? — used `kubectl create service clusterip`, fixed selector on second pass
+- [x] Volume mount pattern: both reps clean? — Rep 1 clean; Rep 2 had env-var naming deviation + one redeploy cycle
+- [x] `--from-file` understood — key name = filename? — verified via `describe configmap`
+- [x] Mixed tasks completed? — Block 4 quick + medium done; field-placement error caught and fixed
+- [x] Areas to improve? — logged in `week-3/notes.md` Day 1
+
+---
+
+## Session Learnings (May 11)
+
+**CronJob schedule pitfall**
+- `*/6 * * * *` = every 6 **minutes**, not hours. Every 6 hours = `0 */6 * * *`.
+- Imperative form beats explain-tree walking: `kubectl create cronjob log-rotate --image=busybox --schedule="0 */6 * * *" -- sh -c "echo rotate" --dry-run=client -o yaml`.
+
+**`volumes` + `volumeMounts` wiring**
+- `volumes` (pod-level) declares the source; `volumeMounts` (container-level) places it in the filesystem. The `name:` field is the glue — must match exactly.
+- Without `subPath`: `mountPath` is always treated as a **directory**, regardless of extension. Mounting at `/etc/app/app.conf` without `subPath` creates a *directory* named `app.conf` containing one file per ConfigMap key.
+- With `subPath: <key>`: mounts a single key as a single file, preserving siblings in the directory.
+
+**ConfigMap update semantics**
+- Whole-directory mounts: files auto-update via atomic symlink swap, ~60–90s. App still needs reload (`rollout restart`) unless it watches the file (Prometheus, Fluent Bit do; nginx, postgres don't).
+- `subPath` mounts: **never auto-update**. Restart required.
+- Env vars from CM (`envFrom` / `valueFrom`): **never auto-update**. Frozen at pod start.
+- Immutable ConfigMaps (`immutable: true`): can't be edited — create a new versioned CM and update the Deployment ref.
+
+**Production use cases for CM volume mounts**
+- nginx (`/etc/nginx/conf.d/`), Prometheus (`prometheus.yml`), Fluent Bit (`fluent-bit.conf`), Envoy bootstrap, Postgres/Redis/MySQL config files, Spring Boot `application.yaml`. Anywhere the app reads config from disk rather than env.
+
+**Field placement (where things live)**
+| Field | Lives under |
+|---|---|
+| `volumes` | pod spec (shared resource) |
+| `volumeMounts` | container (per-container) |
+| `readinessProbe` / `livenessProbe` / `startupProbe` | container |
+| `resources` | container |
+| `env` / `envFrom` | container |
+| `restartPolicy` / `nodeSelector` / `tolerations` / `serviceAccountName` | pod spec |
+
+Strict-decoding errors like `unknown field "spec.template.spec.readinessProbe"` tell you exactly where the field landed wrongly — read the path.
+
+**Exam format note**
+- CKAD tasks are explicit: exact names, exact numeric values, exact paths. No "appropriate" or "standard" — the grader is mechanical.
+- The translation skill being trained: prose ("with environment variable `LOG_LEVEL` set from a ConfigMap") → correct field path (`env.valueFrom.configMapKeyRef`).

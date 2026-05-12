@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: web-server
+  name: web-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-server
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      volumes:
+        - name: nginx-cfg-mnt
+          configMap:
+            name: nginx-cfg
+      containers:
+      - image: nginx:1.21
+        name: nginx
+        volumeMounts:
+          - name: nginx-cfg-mnt
+            mountPath: /etc/nginx/conf.d

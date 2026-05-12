@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-cfg
+  labels:
+    cfg: nginx
+data:
+  default.conf: |
+    server {
+      listen 80;
+      location / {
+        return 200 'ok';
+      }
+    }

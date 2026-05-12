@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-rotate
+spec:
+  schedule: "0 */6 * * *"
+  jobTemplate:
+    metadata:
+      labels:
+        app: log-rotate
+    spec:
+      parallelism: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - image: busybox
+              name: rotator
+              command: ['sh', '-c', 'echo rotate']

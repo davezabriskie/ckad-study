@@ -10,7 +10,7 @@
 - `volumeMounts: [{name: cfg-vol, mountPath: /etc/app}]`
 
 **Prompt B** — fields:
-- `env: [{name: DATABASE_PASSWORD, valueFrom: {secretKeyRef: {name: my-secret, key: DB_PASS}}}]`
+- `env: [{name: APP_LOG_LEVEL, valueFrom: {configMapKeyRef: {name: my-cfg, key: LOG_LEVEL}}}]`
 
 **Prompt C** — fields:
 - `kubectl create configmap my-cfg --from-literal=ENV=staging`

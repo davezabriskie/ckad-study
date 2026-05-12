@@ -28,8 +28,51 @@ volumes:
 
 - Each ConfigMap key becomes a file in `mountPath`
 - File contents = the key's value
-- Useful for config files (nginx.conf, app.properties, etc.)
-- Changes to the ConfigMap propagate to the volume automatically (with a delay)
+- `volumes[].name` must match `volumeMounts[].name` exactly — the glue
+- Useful for config files (nginx.conf, prometheus.yml, fluent-bit.conf, postgresql.conf)
+
+### `subPath` — mount one key as a single file
+
+```yaml
+volumeMounts:
+  - name: cfg
+    mountPath: /etc/app/app.conf   # path INCLUDING filename
+    subPath: app.conf              # which CM key to use
+```
+
+- **Without `subPath`**: `mountPath` is always a *directory*. Mounting at `/etc/app/app.conf` creates a directory named `app.conf` — the `.conf` extension is meaningless to k8s.
+- **With `subPath`**: mounts just that key as a single file. Siblings in the parent directory survive.
+- Tradeoff: `subPath` mounts **never auto-update** when the ConfigMap changes. Pod restart required.
+
+### ConfigMap update propagation
+
+| Mount type | Auto-updates? | Notes |
+|---|---|---|
+| Whole-directory volume mount | Yes (~60–90s) | Atomic symlink swap; app still needs reload unless it watches the file |
+| `subPath` mount | **No** | File is copied at pod start; restart required |
+| Env var (`envFrom` / `valueFrom`) | **No** | Frozen at pod start |
+| Immutable ConfigMap (`immutable: true`) | N/A | Can't be edited; create versioned CM and update Deployment ref |
+
+### Field placement — pod-level vs container-level
+
+| Field | Lives under |
+|---|---|
+| `volumes` | pod spec |
+| `volumeMounts` | container |
+| `readinessProbe` / `livenessProbe` / `startupProbe` | container |
+| `resources` | container |
+| `env` / `envFrom` | container |
+| `restartPolicy` / `nodeSelector` / `tolerations` / `serviceAccountName` / `imagePullSecrets` | pod spec |
+
+Rule: per-process → container. Shared/pod-lifecycle → pod spec. `volumes` is the split case (declared pod-level, mounted container-level).
+
+Strict-decoding errors (`unknown field "spec.template.spec.X"`) name the wrong path — read it to find the misplaced field.
+
+### CronJob schedule — common slip
+
+- `*/6 * * * *` = every 6 **minutes**
+- `0 */6 * * *` = every 6 **hours** (at minute 0)
+- Imperative scaffold beats writing from scratch: `kubectl create cronjob NAME --image=IMG --schedule="..." -- CMD --dry-run=client -o yaml`
 
 ### ConfigMap — All Three Injection Patterns
 
@@ -95,9 +138,14 @@ kubectl diff -k ./overlays/prod   # preview changes before applying
 ## Daily Progress Tracking
 
 ### Day 1 (Monday May 11)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+- YAML Speed: 2/3 reps clean (CronJob schedule slip — `*/6` vs `0 */6`)
+- Tasks Completed: Block 0, 3, 4 complete; Block 1/2 deferred order (video didn't cover volume mounts)
 - Areas to improve:
+  - CronJob schedule: every-N-hours requires explicit minute `0 */N * * *`
+  - Prefer `kubectl create cronjob` imperative over `explain`-tree walking
+  - Field placement: probes/resources/volumeMounts under `containers[]`, not pod spec
+  - Re-name env var to match task spec literally (Block 3 Rep 2 used `APP_LOG_LEVEL` when task said `LOG_LEVEL`)
+  - Verification commands: run them separately, not chained with literal `\n`
 
 ### Day 2 (Tuesday May 12)
 - YAML Speed: _____ reps clean

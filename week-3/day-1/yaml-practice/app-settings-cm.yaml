@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  LOG_LEVEL: warn
+  app.conf: |
+    {
+      "test": true
+    }  

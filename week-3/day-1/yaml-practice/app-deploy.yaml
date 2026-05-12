@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      volumes:
+        - name: app-settings-mnt
+          configMap: 
+            name: app-settings
+      containers:
+      - image: busybox
+        name: busybox
+        command: ['sh', '-c', 'echo $(cat /etc/app/app.conf); while true; do echo "still here"; sleep 3; done;']
+        volumeMounts:
+          - mountPath: /etc/app/app.conf
+            subPath: app.conf
+            name: app-settings-mnt
+        env:
+          - name: APP_LOG_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: app-settings
+                key: LOG_LEVEL
