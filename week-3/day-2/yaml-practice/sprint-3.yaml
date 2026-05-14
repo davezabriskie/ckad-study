@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+spec:
+  jobTemplate:
+    metadata:
+      name: backup
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: busybox
+            name: backup
+            command: ['sh', '-c', 'echo backup']
+          restartPolicy: OnFailure
+  schedule: 0 2 * * *
+status: {}

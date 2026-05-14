@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: tls-app.yaml
+  name: tls-app.yaml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tls-app.yaml
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: tls-app.yaml
+    spec:
+      volumes:
+        - name: tls-secret-mnt
+          secret:
+            secretName: tls-secret
+      containers:
+      - image: busybox
+        name: nginx
+        command: ['sh', '-c', 'echo "leaking secrets..."; while true; do ls /etc/tls; cat /etc/tls/*; echo ---; sleep 5; done;']
+        volumeMounts:
+          - mountPath: /etc/tls
+            name: tls-secret-mnt

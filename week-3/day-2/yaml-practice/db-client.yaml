@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: db
+      db: postgres
+  template:
+    metadata:
+      labels:
+        app: db
+        db: postgres
+    spec:
+      containers:
+        - image: postgres:latest
+          name: postgres-instance
+          envFrom:
+            - secretRef:
+                name: db-secret

@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-cfg
+data:
+  ENV: prod
+  LOG_LEVEL: info
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+stringData:
+  API_KEY: abc123
+data:
+  API_KEY_ENC: YWJjMTIz
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      volumes:
+        - name: app-secret-mnt
+          secret:
+            secretName: app-secret
+      containers:
+        - image: nginx:1.21
+          name: nginx
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+          envFrom:
+            - configMapRef:
+                name: app-cfg
+          env:
+            - name: APP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: API_KEY
+          volumeMounts:
+            - mountPath: /etc/conf
+              subPath: API_KEY_ENC
+              name: app-secret-mnt
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-svc
+spec:
+  selector:
+    app: app
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
