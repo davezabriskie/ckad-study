@@ -202,6 +202,16 @@ wrong under time pressure, and have no shortcut.
 - **Ingress repetition**: minimum 3 Ingress YAML reps per session — path rules, host rules, TLS
 - **NetworkPolicy repetition**: minimum 3 NetworkPolicy YAML reps per session —
   ingress rules, egress rules, podSelector, namespaceSelector, combined selectors
+- **Selector forms (NEW — covers field-alternates gap)**: at least one NetworkPolicy
+  rep per session must use `matchExpressions` (set-based: `In` / `NotIn` / `Exists` /
+  `DoesNotExist`) instead of `matchLabels`. Same applies if a Deployment selector task
+  comes up. Default has been `matchLabels`; the exam can ask for either
+- **Service type variety**: across the week, write at least one each of `ClusterIP`,
+  `NodePort`, `LoadBalancer`, and `ExternalName`. `NodePort` and `ExternalName` are the
+  surprise picks — know the YAML shape, not just the name
+- **Probe type variety**: at least one `exec` probe and one `tcpSocket` probe across
+  the week — defaulting to `httpGet` leaves a gap. `exec` is common when there's no
+  HTTP endpoint (databases, queue workers); `tcpSocket` for plain TCP services
 - **Debugging workflows (Day 3-4)**:
   ```
   Pod not reachable via Service →
@@ -316,6 +326,12 @@ Volumes (persistent + ephemeral), PVC/PV, StatefulSets, resource requests/limits
   - `emptyDir` — pod-lifetime scratch space, also memory-backed (`medium: Memory`)
   - `downwardAPI` — expose pod metadata (labels, annotations, fields) as files
   - `projected` — combine ConfigMap + Secret + downwardAPI + ServiceAccount token into one volume
+- **`valueFrom` sources beyond ConfigMap/Secret (NEW — field-alternates gap)**:
+  - `fieldRef` — expose pod metadata as an env var (`status.podIP`, `metadata.name`,
+    `metadata.namespace`, `spec.nodeName`). The env-var counterpart to `downwardAPI` volumes
+  - `resourceFieldRef` — expose container resource limits/requests as env vars
+    (e.g. `limits.memory`, `requests.cpu`). Useful for apps that self-tune to limits
+  - Pair with at least one drill: pod with `fieldRef` exposing its own IP as `MY_POD_IP`
 - **Container image build/modify (NEW — addressing Application Design gap, ~30 min block)**:
   - Dockerfile basics: `FROM`, `RUN`, `COPY`, `CMD`, `ENTRYPOINT`, `EXPOSE`
   - Build: `docker build -t myimage:tag .`
