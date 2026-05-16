@@ -264,10 +264,16 @@ kubectl diff -k ./overlays/prod   # preview changes before applying
   - **YAML `:` needs a space after it** — `replicaCount:4` parses as a string and Helm silently ignores it; `replicaCount: 4` is the integer. Three iterations on values.yaml to find this
   - **`--dry-run` before applying values file**: `helm upgrade <rel> <chart> -f values.yaml --dry-run` catches YAML errors and wrong keys without touching the cluster
 
-### Day 4 (Thursday May 14)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+### Day 4 (Friday May 15 night / Saturday May 16 — slipped from Thu May 14, split across two sessions)
+- YAML Speed (Block 0 only, Fri night): 3/3 scaffolds saved in ~7 min; structural fixes needed (resources block on Deployment, `-c` typo on CronJob command from vim'd-in array)
+- Tasks Completed: Block 0 (Fri night). Block 1/3/4/5 → Saturday
 - Areas to improve:
+  - **`--labels=` uses `=` not `:`** (`--labels=app=cache`, not `app:cache`). Same separator-form trap as `--from-literal`
+  - **`apply -f` discipline still slipping**: 4 `kubectl create -f` calls tonight led to a `kubectl delete service --all` workaround. The Day 2 lesson needs another rep — promote to top-of-mind: *default to `apply -f` for everything except dry-run scaffolds*
+  - **Imperative resource-name discipline**: `kubectl create cronjob --schedule=...` with no name. First positional arg is always the resource name. Same shape as Helm's `<verb> <RELEASE> <CHART>` rule
+  - **For CronJob/Pod commands, put them after `--` in the imperative**, not vim'd in afterward: `kubectl create cronjob name --image=X --schedule="..." -- sh -c "echo ok"`. Avoids array-syntax slips like `['sh', -'c', 'echo ok']`
+  - **Imperative `kubectl create deployment` has no flag for resources/probes/volumes** — those always require post-scaffold vim editing
+  - **Realistic resource values**: `cpu: 1m, memory: 8Mi` is structurally valid but redis won't boot. Pick values that match the workload
 
 ### Day 5 (Friday May 15)
 - YAML Speed: _____ reps clean

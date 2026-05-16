@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-check
+spec:
+  jobTemplate:
+    metadata:
+      name: health-check
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+          - image: busybox
+            name: health-check
+            command: ['sh', '-c', 'echo ok'] 
+          restartPolicy: OnFailure
+  schedule: '*/30 * * * *'
+status: {}

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cache
+  name: cache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cache
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: cache
+    spec:
+      containers:
+      - image: redis:7
+        name: redis
+        resources:
+          limits:
+            cpu: 2m
+            memory: 16Mi
+          requests:
+            cpu: 1m
+            memory: 8Mi
+status: {}
