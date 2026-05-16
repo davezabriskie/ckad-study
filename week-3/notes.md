@@ -140,9 +140,52 @@ The outer `name:` and the inner `key:` are independent. The task usually specifi
 ### Helm
 
 - Package manager for Kubernetes — installs pre-built application charts
-- `helm upgrade --install` is preferred over `helm install` — creates if not exists, upgrades if it does
-- Values override order (last wins): chart defaults → `-f values.yaml` → `--set key=value`
-- `helm get values <release>` shows only the overridden values, not all defaults
+- **Argument order**: `helm <verb> <RELEASE_NAME> <CHART>`. Release name first, chart second. Same shape for `install`, `upgrade`, `upgrade --install`
+- `helm upgrade --install` is preferred over `helm install` — creates if not exists, upgrades if it does (upsert; idempotent)
+- `helm install` errors if release exists; `helm upgrade` errors if release missing. `--install` flag bridges both
+- `helm uninstall <RELEASE>` takes the release name only — no chart argument
+- `helm list` has no subcommand (not `helm list releases`)
+
+#### Chart values discovery — the workflow
+
+Chart value keys are author-defined and rarely match Kubernetes field names. `replicas` (K8s) may be `replicaCount` (chart). Never guess.
+
+```bash
+helm show values <chart>                    # full default values.yaml
+helm show values <chart> | grep -i <thing>  # find the exact key path
+helm show readme <chart>                    # human guide; bitnami's are excellent
+helm show all <chart>                       # everything
+```
+
+**Discipline**: the moment a `--set` doesn't take effect, stop retrying — run `helm show values | grep` first.
+
+#### Override precedence (last wins)
+chart defaults → `-f values.yaml` → `--set key=value`
+
+#### `--set` syntax
+- Scalar: `--set key=value`
+- Nested: `--set parent.child=value` (dots for nesting)
+- List of objects: `--set list[0].name=foo,list[0].value=bar`
+- No colons, no `[a=b]` shorthand. CLI uses `=`, never `:`
+
+#### YAML values file — the colon-space rule
+
+| Form | Parsed as |
+|---|---|
+| `replicaCount=4` | **CLI only** (--set). Not valid YAML |
+| `replicaCount:4` | YAML string `"replicaCount:4"` — silently wrong |
+| `replicaCount: 4` | Integer `4` — correct. Space after `:` is mandatory |
+
+Validate before applying: `helm upgrade <release> <chart> -f values.yaml --dry-run`
+
+#### Helm-managed resources
+Don't `kubectl patch` / `kubectl edit` resources owned by a release. Next `helm upgrade` reconciles them away. Go through `helm upgrade --set` or values file.
+
+#### Useful inspect commands
+- `helm list` — installed releases
+- `helm get values <release>` — only overridden values (what you set)
+- `helm get values <release> --all` — full effective values
+- `helm status <release>` — release state and notes
 
 ### Kustomize
 
@@ -207,10 +250,19 @@ kubectl diff -k ./overlays/prod   # preview changes before applying
   - **YAML hygiene**: strip `status: {}`, `strategy: {}`, and unused port `name:` from dry-run output before saving
   - **Typo discipline**: `POSTGRESS_PASSWORD`, `app: tls-app.yaml` label leak — slow down on env var names and labels
 
-### Day 3 (Wednesday May 13)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+### Day 3 (Friday May 15 — slipped from Wed May 13)
+- YAML Speed: 3/3 Block 0 sprints clean (Deployment, Service, CronJob `0 8 * * 1` for Mon 8am — Week 2 gap closed)
+- Tasks Completed: Block 0, 3, 4 worked through; Block 1/2 deferred
 - Areas to improve:
+  - **`helm` argument order**: `helm <verb> <RELEASE_NAME> <CHART>` — release name first, chart second. Tried `helm install bitnami/nginx web` and `helm install bitnami/nginx` before landing it
+  - **`helm list` is the command** — no subcommand. Burned tries on `helm list releases`, `helm releases`, `helm release`
+  - **Chart value keys ≠ K8s field names**: spent ~7 min on `--set replicas=N` before `helm show values | grep` revealed `replicaCount`. Reflex to build: the moment `--set` doesn't take effect, stop retrying and `helm show values <chart> | grep -i <thing>` first
+  - **`--set` syntax**: `=` to assign, `.` to nest, `[0]` to index a list of objects. No colons, no brackets-as-list. Lists of objects: `extraEnvVars[0].name=FOO,extraEnvVars[0].value=bar`
+  - **Don't `kubectl patch` helm-managed resources**: patches work for one second, next `helm upgrade` reconciles them away. Helm owns the resource — go through helm
+  - **`helm uninstall` takes the release name only**, no chart argument. Tried `helm uninstall web bitnami/nginx` before landing `helm uninstall web`
+  - **Labels vs env vars in bitnami charts**: pod labels = `commonLabels.KEY=value` (or `podLabels`); env vars = `extraEnvVars[N].name/value`. Different keys, different shapes
+  - **YAML `:` needs a space after it** — `replicaCount:4` parses as a string and Helm silently ignores it; `replicaCount: 4` is the integer. Three iterations on values.yaml to find this
+  - **`--dry-run` before applying values file**: `helm upgrade <rel> <chart> -f values.yaml --dry-run` catches YAML errors and wrong keys without touching the cluster
 
 ### Day 4 (Thursday May 14)
 - YAML Speed: _____ reps clean
