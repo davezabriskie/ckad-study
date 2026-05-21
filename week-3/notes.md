@@ -189,10 +189,111 @@ Don't `kubectl patch` / `kubectl edit` resources owned by a release. Next `helm 
 
 ### Kustomize
 
-- Built into `kubectl` — no separate install needed
-- `kubectl apply -k ./dir` applies everything in the kustomization
-- `kustomization.yaml` is the entry point — must list `resources`
-- Overlays patch base resources without modifying them
+- Built into `kubectl` — no separate install needed (separate `kustomize` CLI exists but not required)
+- Client-side tool: runs before anything hits the API. **`kubectl explain kustomization` does NOT work** — no API resource, no schema, must memorize the shape
+- `kustomization.yaml` is the entry point — every directory Kustomize touches needs one
+- Overlays compose base resources without modifying base files
+
+#### Directory pattern
+
+```
+myapp/
+├── base/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── kustomization.yaml
+└── overlays/
+    └── prod/
+        └── kustomization.yaml   # resources: [../../base]
+```
+
+#### `kustomization.yaml` shape (memorize)
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml             # base: list files
+  - ../../base                  # overlay: list base directory
+
+namePrefix: prod-               # web → prod-web
+nameSuffix: -v2                 # web → web-v2
+
+labels:                         # modern form (commonLabels is deprecated)
+  - pairs:
+      env: prod
+    includeSelectors: false     # don't touch immutable selectors
+    includeTemplates: true      # do add to pod template labels
+
+images:
+  - name: nginx                 # match by image name in base (no tag)
+    newTag: "1.22"              # patch tag
+    # newName: nginx-fork       # optional: swap image
+```
+
+#### The four CKAD-relevant transformations
+`resources`, `namePrefix`/`nameSuffix`, `labels` (or deprecated `commonLabels`), `images`
+
+#### The three commands
+```bash
+kubectl apply -k overlays/prod/      # apply (directory, not file)
+kubectl diff  -k overlays/prod/      # preview diff vs cluster
+kubectl kustomize overlays/prod/     # render merged YAML to stdout, no cluster touch
+```
+
+`kubectl kustomize` is the highest-value inspect command — use it before `apply` to sanity-check the merged output.
+
+#### `commonLabels` is deprecated — danger of the old form
+
+`commonLabels` always touches **selectors**, which are **immutable on existing Deployments**. Applying an overlay with `commonLabels` to a base that's already in the cluster errors with:
+```
+spec.selector: Invalid value: ...: field is immutable
+```
+
+Use the new `labels:` form with `includeSelectors: false, includeTemplates: true` instead. Same effect on metadata + pod templates, leaves selector alone.
+
+#### Generators (low CKAD priority)
+
+```yaml
+configMapGenerator:
+  - name: app-config
+    literals: [LOG_LEVEL=DEBUG]
+secretGenerator:
+  - name: app-secret
+    literals: [API_KEY=abc123]
+```
+
+- Create *new* ConfigMaps/Secrets at render time with a **content-hash suffix** in the name
+- Kustomize auto-rewrites references (`configMapKeyRef.name`, `volumes.configMap.name`, etc.) in resources it manages to point to the hashed name
+- Hash changes when content changes → Deployment ref changes → automatic rolling restart
+- Disable with `generatorOptions: {disableNameSuffixHash: true}` if something outside Kustomize references the original name
+- **Literals are verbatim** — `$(date)` does NOT shell-expand
+- For CKAD: know they exist and the auto-rollout concept. Don't grind reps
+
+#### Patches (low CKAD priority)
+
+```yaml
+patches:
+  - path: patch-env.yaml          # strategic merge file
+  - target: {kind: Deployment, name: web}
+    patch: |                      # inline JSON 6902
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value: {name: ENV, value: prod}
+```
+
+- Strategic merge: write partial K8s YAML that names what to change; merges by `kind` + `name` at top level, by `name` for list items (`containers`, `env`, `volumeMounts`)
+- For env-var changes on the exam, `kubectl set env deployment/X K=V` is the shorter path. Patches are GitOps territory more than CKAD
+- Patch references the **base** resource name, not the prefixed name
+
+#### Immutable fields under selectors
+
+Deployment `spec.selector` cannot be changed after creation. `commonLabels` slipped into the selector silently is the most common trap. Once you've applied a base with a given selector, any overlay that mutates that selector requires `kubectl delete` + re-apply, not just `apply -k`.
+
+#### Apply target
+
+`kubectl apply -k <DIR>` takes a **directory**, not a file. `-f` takes a file. Easy to conflate under pressure (`kubectl apply -k overlays/prod/kustomization.yaml` fails).
 
 ## kubectl Commands for Week 3
 
@@ -274,6 +375,27 @@ kubectl diff -k ./overlays/prod   # preview changes before applying
   - **For CronJob/Pod commands, put them after `--` in the imperative**, not vim'd in afterward: `kubectl create cronjob name --image=X --schedule="..." -- sh -c "echo ok"`. Avoids array-syntax slips like `['sh', -'c', 'echo ok']`
   - **Imperative `kubectl create deployment` has no flag for resources/probes/volumes** — those always require post-scaffold vim editing
   - **Realistic resource values**: `cpu: 1m, memory: 8Mi` is structurally valid but redis won't boot. Pick values that match the workload
+
+#### Day 4 continued — Wednesday May 20 (Blocks 3 + 4, ~38 min)
+
+- YAML/Kustomize Speed: 4 overlays built clean (prod, dev with generators, block4 label task, stg). Iteration tight on prod (3 cycles to clean apply) — typical Kustomize debug loop
+- Tasks Completed: Blocks 3 + 4 done. Block 2 covered via text TL;DW (no Udemy). Block 5 folded into Block 3 (`kubectl kustomize` reps inline)
+- Wins (worth remembering):
+  - **`kubectl diff -k` iteration loop** (~4 cycles on dev/) — preview-before-apply finally landed as muscle memory
+  - **`kubectl kustomize <dir>`** used inline to inspect rendered output without touching the cluster — the right reflex for a tool with no `explain`
+  - **`mkdir -p`** picked up immediately and used naturally
+- Areas to improve:
+  - **`create -k` slipped again** (`kubectl create -k overlays/stg`). This is now the fourth `create -*` slip across Week 3. `apply -k`/`apply -f` is idempotent; `create -*` errors on existing → forces `delete --all` cycle. Single highest-leverage habit to harden for milestone
+  - **`kubectl explain kustomization` × 2** — reflex from K8s API discipline. Kustomize is client-side, no API resource, no explain. One-and-done lesson
+  - **`apply -k` takes a directory, not a file**: `kubectl apply -k overlays/block4/kustomization.yaml` fails. `-f` is files, `-k` is directories
+  - **Imperative resource-name discipline**: `kubectl create deployment --replicas=...` with no name argument (line 7873). Same shape as the Helm `<verb> <release>` and cronjob slips earlier in the week. First positional = resource name, every time
+  - **Reaching for `kubectl delete --all` as a workaround** (line 7950) when immutable-selector error hit. The right fix was `labels: [{includeSelectors: false}]` — delete-all worked but masks the lesson
+  - **Tried `kustomize edit fix`** (standalone CLI, not installed) and `kubectl kustomize edit fix` (not a real subcommand). Fine outcome (hand-edited), but worth knowing the standalone `kustomize` binary is separate from `kubectl kustomize` and not in scope for CKAD
+- Concepts solidified:
+  - Base + overlay mental model
+  - Modern `labels:` form vs deprecated `commonLabels:` (selector immutability trap)
+  - `configMapGenerator`/`secretGenerator` hash-rewrite mechanism (concept only — low exam priority)
+  - Generators do nothing unless the base resources reference the logical name (`configMapKeyRef.name: simple-config`); orphan generators just sit in the cluster unused
 
 ### Day 5 (Friday May 15)
 - YAML Speed: _____ reps clean

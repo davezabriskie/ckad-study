@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources: 
+  - ../../base
+commonLabels:
+  env: dev
+  version: latest
+namePrefix: dev-
+nameSuffix: -rc
+images:
+  - name: nginx
+    newTag: "latest"
+configMapGenerator:
+  - name: simple-config
+    literals:
+      - LOG_LEVEL=DEBUG
+      - time=$(date)
+secretGenerator:
+  - name: simple-secret
+    literals:
+      - KEEP_IT=secret
