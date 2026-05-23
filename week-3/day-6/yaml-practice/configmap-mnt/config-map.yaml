@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reps-cfg
+data:
+  test: west
+  number: "123"

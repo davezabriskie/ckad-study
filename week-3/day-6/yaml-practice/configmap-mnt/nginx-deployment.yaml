@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-rep
+  name: nginx-rep
+spec:
+  replicas: 37
+  selector:
+    matchLabels:
+      app: nginx-rep
+  template:
+    metadata:
+      labels:
+        app: nginx-rep
+    spec:
+      volumes:
+        - name: config-mount
+          configMap:
+            name: nginx-cfg
+      containers:
+      - image: nginx:1.21
+        name: nginx
+        resources:
+          requests:
+            cpu: 2m
+            memory: 16Mi
+        volumeMounts:
+          - mountPath: /etc/nginx/conf.d
+            name: config-mount 
