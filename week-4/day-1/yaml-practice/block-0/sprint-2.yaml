@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: api
+  name: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - image: nginx:1.21
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+status: {}

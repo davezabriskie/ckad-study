@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kustom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kustom
+  template:
+    metadata:
+      labels:
+        app: kustom
+    spec:
+      containers:
+        - image: nginx:1.21
+          name: nginx
+          ports:
+            - containerPort: 80
