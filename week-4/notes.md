@@ -2,7 +2,7 @@
 
 ## Gaps Carried from Week 3
 
-1. **`apply -f` / `apply -k` over `create -f` / `create -k`** — Priority 1 intervention. `kca` / `kck` aliases set Day 1.
+1. **`apply -f` / `apply -k` over `create -f` / `create -k`** — Priority 1. Drill the full command form (`kubectl apply -f`); aliases come after mastery, not as the intervention.
 2. **YAML error triage** — read parse errors before reaching for `kubectl explain`. Multi-doc files reset line numbers at `---`.
 3. **No-imperative, no-explain resources require cold memory**: Kustomize (W3), Ingress (W4 D2), NetworkPolicy (W4 D3).
 4. **`-k` takes a directory, not a file**. `-f` takes a file.
@@ -13,6 +13,29 @@
 ---
 
 ## Key Concepts
+
+### Ingress has an imperative scaffold (discovered Day 2)
+
+The W4 plan said Ingress had no `kubectl --dry-run` shortcut. Wrong. `kubectl create ingress` exists and produces a usable scaffold:
+
+```bash
+kubectl create ingress NAME --rule="host/path*=svc:port" --dry-run=client -o yaml > ing.yaml
+```
+
+Rule syntax:
+- `host/path*=svc:port` — `*` after path → `pathType: Prefix`
+- `host/path=svc:port` — no `*` → `pathType: Exact`
+- Multiple rules: repeat `--rule=...` flags
+- TLS: append `,tls=secretName` inside a rule — `--rule="shop.example.com/*=web-svc:80,tls=tls-secret"`
+
+Generated YAML field order is `backend, path, pathType` (alphabetical) rather than the more idiomatic `path, pathType, backend`. Functionally identical; reorder in vim if you prefer the readable form.
+
+**What you still need to write by hand:**
+- `defaultBackend` block (no flag for it)
+- The TLS Secret itself (`kubectl create secret tls NAME --cert=... --key=...` exists but needs real files; for practice, hand-write with `type: kubernetes.io/tls` + `stringData: {tls.crt, tls.key}`)
+- Multi-host rules where each host has different `tls.hosts` lists
+
+**Discovery path**: `kubectl create -h` → noticed `ingress` in the resource list → `kubectl create ingress -h` showed the `--rule` syntax. Same reflex as `--help` on a failed flag — when uncertain, ask `kubectl create -h` first.
 
 ### Kustomize — looking it up when you can't `explain` it
 
@@ -87,7 +110,6 @@ _To be filled in as the week progresses._
   - **`kca` alias set but unused in same session** — Block 0 Step 3 typed `kubectl apply -f` three times after the alias was added in Step 1. Worst-case habit outcome: aliased and not reinforced. Make `kca`/`kck` the next reflex starting Day 2
   - **Flag-guess loop before `--help`** — `--tcpPorts=80:80` → `--tcpPort=80:80` → `--help` → `--tcp=80:80`. Reflex to build: one failed flag → `--help` immediately, don't retry-with-variations
   - **Dry-run artifacts left in saved YAML** — `strategy: {}`, `status: {}`, unused `name: 80-80` on a port (W3 Day 2 lesson recurring). Strip these before `:wq`. **Now seen across 3 blocks tonight (0, 3, 4)** — promote to Day 2 opener checklist
-  - **`kca` / `kck` aliases — zero uses across Block 0, 3, 4 tonight.** Set in Step 1 and never reinforced. Day 2 must open with: alias-use check before any `apply`. If `k apply -f` or `kubectl apply -f` appears in CLI history, the habit has lost
   - **Probe `host:` field trap** — `host: localhost` on a tcpSocket probe broke readiness (kubelet probes from node netns, not pod). Default behavior (omit `host:`) targets pod IP. Rule: never set `host:` on a probe unless you have a specific reason
   - **Probe fields are immutable on a running Pod** — `kubectl apply` errors with "spec: Forbidden". Use `kubectl replace --force -f` to cycle, or `delete pod + apply`. Labels ARE mutable, but probe/container spec changes require a cycle
 
@@ -96,15 +118,22 @@ _To be filled in as the week progresses._
 ### Day 2 Opener Checklist (carry from Day 1)
 
 Before any apply on Day 2:
-- [ ] Use `kca` / `kck` aliases — `kubectl apply -f` should not appear in CLI history
+- [ ] Drill `kubectl apply -f` (full form) — not `kubectl create -f`. Aliases come after mastery; not enforced here
 - [ ] Strip dry-run artifacts on save: `strategy: {}`, `status: {}`, unused port `name:` entries. Make `:wq` the gate, not a future cleanup
 - [ ] Re-read the prompt literally before typing — resource names, port numbers, label keys
 - [ ] If a flag fails, `--help` immediately. No retry-with-variations.
 
-### Day 2 (Monday May 25)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+### Day 2 (Tuesday May 26 — slipped from Mon May 25; Tue rest absorbed it)
+- YAML Speed: 3/3 Ingress reps + quick + medium structurally correct; 2-3 patch cycles per cross-domain
+- Tasks Completed: Block 0, 1, 2, 3, 4 complete. Block 5 covered implicitly through usage (explain hit during Block 0 exec probe + Block 3 ingress structure)
 - Areas to improve:
+  - **Literal-prompt-name slip** — Ingress named `medium` vs prompt's `shop-ing`. Fourth occurrence (W3 Task 2 `db-svc`, Block 3 rep 2 backend, Block 4 medium Ingress name + missing top-level Deployment label). Recurring genuine gap; the grader is mechanical
+  - **Service missing `selector`** in Block 4 medium v1 — chain broken at apply time, endpoints would be empty. Caught + fixed in patch
+  - **Missing `type: kubernetes.io/tls`** on rep 3 TLS Secret — defaults to Opaque. Strict TLS handlers would reject; tolerant controllers accept
+  - **Dry-run artifact `name: 80-80`** slipped through on Block 0 svc.yaml. Day 1 lesson held on `deploy.yaml` (stripped `strategy: {}` / `status: {}`) but not on service
+  - **`exec` probe wrapped in `sh -c`** unnecessarily — direct `["redis-cli", "ping"]` is cleaner since you're invoking a binary, not a shell pipeline
+  - **3 `explain` calls** on `Pod.spec.containers.readinessProbe.exec` before the shape stuck — exec probe is `exec.command: [array of strings]`, that's the whole structure
+- Big find: imperative `kubectl create ingress` scaffold (see Key Concepts below)
 
 ### Day 3 (Wednesday May 27)
 - YAML Speed: _____ reps clean

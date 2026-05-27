@@ -6,7 +6,7 @@
 
 From `week-3/milestone-results.md` and `week-3/notes.md`:
 
-1. **`apply -f` / `apply -k` over `create -f` / `create -k`** — single highest-leverage habit. 20+ slips at milestone. **Priority 1**: alias `kca` / `kck` in zsh on Day 1, Block 0 step 1.
+1. **`apply -f` / `apply -k` over `create -f` / `create -k`** — single highest-leverage habit. 20+ slips at milestone. **Priority 1**: drill the full command form. Aliases come after mastery, not as the intervention.
 2. **YAML error triage** — read parse errors before reaching for `kubectl explain`. Multi-doc files reset line numbers at `---` separators. Drilled into Day 2 Block 0 (Ingress is multi-doc-prone with TLS Secret + Ingress in one file).
 3. **No-imperative resources from cold memory** — Kustomize (Week 3 carry), Ingress (Day 2), NetworkPolicy (Day 3). No `explain`, no generator, no peeking at prior files. Cold rep in every Day 1+ Block 0 until milestone.
 4. **`-k` takes a directory, not a file**; **`-f` takes a file** — Day 1 Block 0 rep.
@@ -20,7 +20,7 @@ From `week-3/milestone-results.md` and `week-3/notes.md`:
 
 Services (all four types), Ingress (high repetition, cold), NetworkPolicy (high repetition, cold), service discovery, connectivity debugging, observability commands.
 
-Ingress and NetworkPolicy are the only Week 4 resources with no `kubectl --dry-run` shortcut and no usable `explain` tree under exam time pressure. Both get minimum 3 cold reps per session that covers them.
+~~Ingress and NetworkPolicy are the only Week 4 resources with no `kubectl --dry-run` shortcut~~ — **Day 2 finding**: `kubectl create ingress NAME --rule="host/path*=svc:port"` exists. See `notes.md` → Key Concepts → "Ingress has an imperative scaffold". NetworkPolicy still has no imperative scaffold and stays cold-write. Ingress reps shift to "imperative scaffold + manual `defaultBackend` / `tls` block" rather than full cold writes.
 
 ---
 
@@ -82,7 +82,7 @@ Results → `week-4/milestone-results.md`.
 - [ ] Write at least one NetworkPolicy using `matchExpressions`
 - [ ] Cover all four Service types in YAML across the week (ClusterIP, NodePort, LoadBalancer, ExternalName)
 - [ ] One `exec` probe + one `tcpSocket` probe used in tasks this week
-- [ ] Zero `kubectl create -f` / `create -k` calls in Days 3–6 transcripts (alias adoption check)
+- [ ] Zero `kubectl create -f` / `create -k` calls in Days 3–6 transcripts (full-command `apply` form, no `create`)
 - [ ] Complete Week 4 milestone in 25-minute flexible window
 
 ---
