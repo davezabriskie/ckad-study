@@ -14,6 +14,106 @@
 
 ## Key Concepts
 
+### NetworkPolicy: Service labels are not Pod labels (Day 3)
+
+NetworkPolicy peer selectors match **Pod labels**. The Service's `metadata.labels` are irrelevant to NetworkPolicy matching even when the Service fronts the pods you want to gate.
+
+Cross-NS PoC misfire on Day 3: `podSelector: tier=backend` selected zero pods because the actual backend pods had `app=backend` and the `tier=backend` label was on the Service object. The policy applied without error and looked correct in `describe netpol` — but selected nothing, so it was a no-op.
+
+Mental check before applying any NP: `kubectl get pods -l <key>=<value> --show-labels` — confirm pods actually carry the label you're selecting on.
+
+### NetworkPolicy is stateful (Day 3)
+
+Compliant CNIs (Calico, Cilium, Weave) track connection state. Allowing ingress to a backend pod automatically permits the response packets going back to the caller. You don't need to add egress rules for response traffic — only for *initiating* new connections.
+
+This means a "deny all egress" policy on the backend still allows it to serve responses to incoming traffic. The "egress" lockdown only governs *outbound-initiated* connections (DNS lookups, external API calls, etc.).
+
+### Cross-namespace NetworkPolicy shape (Day 3)
+
+Policy lives in the **receiving** namespace. To allow ingress from a specific app in a different namespace:
+
+```yaml
+ingress:
+  - from:
+      - podSelector:
+          matchLabels:
+            app: frontend
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: frontend
+```
+
+Both selectors under the same `-` peer = AND. Without `namespaceSelector`, `podSelector` only matches pods in the **same namespace as the policy** (default scope). The `kubernetes.io/metadata.name: <ns-name>` label is auto-applied by the API server to every namespace — reliable way to target a namespace by name without manually labeling it.
+
+DNS-resolution failures ("bad address" on wget/curl) are a separate concern from policy block — DNS needs a Service to exist for the name to resolve. Without a Service, no NP is needed to "fail" the connection; it fails at name resolution before traffic even leaves.
+
+### `kubectl logs --previous` reliability caveat (Day 3)
+
+`--previous` works as long as containerd hasn't GC'd the dead container's log dir. For sub-second crashers (e.g., `echo dying; exit 1`), the container may exit so fast that logs are unavailable by the time `--previous` is queried — error:
+
+```
+unable to retrieve container logs for containerd://<id>
+```
+
+Fallback: `kubectl describe pod <name>` shows `Last State: Terminated` with reason and exit code, even when logs are gone. For real-world apps that run longer, `--previous` is reliable.
+
+Repro tip: add `sleep 5` before the failing command (`echo dying; sleep 5; exit 1`) so the log buffer gets flushed.
+
+### Pod immutability + `patch` vs `replace --force` (Day 3)
+
+**On a running Pod, only these spec fields are mutable:**
+- `spec.containers[*].image`
+- `spec.initContainers[*].image`
+- `spec.activeDeadlineSeconds`
+- `spec.tolerations` (additions only)
+- `spec.terminationGracePeriodSeconds`
+
+Everything else — `command`, `args`, `env`, `envFrom`, `volumes`, `volumeMounts`, `resources`, probes (`readinessProbe`/`livenessProbe`/`startupProbe`), ports, `securityContext` — is immutable on a Pod. `metadata.labels` and `metadata.annotations` ARE mutable.
+
+`kubectl patch` and `kubectl apply` both respect the immutability rules. They'll return:
+
+```
+spec: Forbidden: pod updates may not change fields other than spec.containers[*].image, ...
+```
+
+**To change an immutable field on a Pod:**
+
+```bash
+# Path 1: delete + recreate (fastest for ad-hoc pods)
+kubectl delete pod <name>
+kubectl run <name> --image=... -- <new command>
+
+# Path 2: edit YAML + replace --force (preserves the file)
+kubectl get pod <name> -o yaml > pod.yaml
+# vim pod.yaml — edit any field
+kubectl replace --force -f pod.yaml          # = delete + recreate in one command
+```
+
+`kubectl replace --force` destroys the pod and creates a new one with the new spec — no immutability constraint because the original is gone. Different from `kubectl replace` (no `--force`), which does in-place replace and IS subject to immutability.
+
+**Patch vs Replace mental model:**
+
+| Command | Behavior | Respects immutability? |
+|---|---|---|
+| `kubectl apply -f` | strategic merge with the apply config | yes |
+| `kubectl patch` | JSON patch / strategic merge / merge | yes |
+| `kubectl edit` | edit + apply | yes |
+| `kubectl replace -f` | in-place full-object replace | yes |
+| `kubectl replace --force -f` | delete then create — pod is reborn | **no** (because it's a new pod) |
+
+**Why this matters — and why you almost never run bare Pods in real-world Kubernetes:**
+
+**Deployments solve this for you.** A Deployment's `spec.template.spec.containers` is fully mutable — patch it, the Deployment creates new pods with the new template and reaps old ones via rolling update. No "delete + recreate" gymnastics. Same for StatefulSets, DaemonSets.
+
+```bash
+# On a Deployment, changing command works directly:
+kubectl set image deploy/myapp myapp=newimage:tag                  # image
+kubectl patch deploy/myapp -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","command":["sh","-c","..."]}]}}}}'  # command
+# Both trigger rolling restart with new spec
+```
+
+The exam will surface this — if a question says "change the command on this pod," reach for delete + recreate or `replace --force`. If it's a Deployment, patch the template.
+
 ### Ingress has an imperative scaffold (discovered Day 2)
 
 The W4 plan said Ingress had no `kubectl --dry-run` shortcut. Wrong. `kubectl create ingress` exists and produces a usable scaffold:
@@ -136,9 +236,27 @@ Before any apply on Day 2:
 - Big find: imperative `kubectl create ingress` scaffold (see Key Concepts below)
 
 ### Day 3 (Wednesday May 27)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+- YAML Speed: 3/3 NetworkPolicy reps structurally correct after iteration (rep2 took 5 vim cycles on egress shape, rep3 first-try). Cross-NS PoC clean after one label-mismatch fix
+- Tasks Completed: Block 0 (2 scaffolds), Block 2 (NP overview text TL;DW — no Udemy access), Block 3 (3 NP reps incl. matchExpressions), Block 4 (observability drill: logs flags, multi-container, --previous, top, events, set image, patch). Block 5 (explain) covered implicitly. Block 1 (drills) deferred per new rule — drills go after learning, not before
+- Bonus: cross-namespace PoC built (frontend + backend ns, FE→BE-only ingress, FE egress locked to BE+DNS)
 - Areas to improve:
+  - **Literal-prompt-name slip — 5th W4 occurrence**: rep2 named `all-server-egress-dns-only` vs prompt `allow-server-egress-dns-only`. Now a load-bearing milestone risk; needs Day 5 forced rep
+  - **`-k` vs `-f` slip resurfaced** (Day 3 Block 0 line 8413). Same W3 milestone Task 5 issue. `-f` files, `-k` directories
+  - **Service labels are not Pod labels** — cross-NS PoC initially had `podSelector: tier=backend` matching the Service's metadata label, not the Pod labels. NetworkPolicy peer selectors match POD labels only; Service labels are irrelevant for NP
+  - **`set image` container name confusion** — `kubectl set image pod/X container=image:tag` requires the container's *name as declared in spec*, which defaults to the pod name from `kubectl run` but is independent of it. Iterated several times before landing
+  - **JSON patch syntax** — containers must be an array `[{name: ..., command: ...}]`, each entry needs `name:` to identify which container to patch. And Pod fields beyond `image` are immutable regardless
+  - **DNS resolution ≠ NetworkPolicy** — "bad address" from wget is DNS failure (no Service exists), not NP block. NP block would be a timeout, not an address error
+  - **kindnet doesn't enforce NetworkPolicy** — applies cleanly, doesn't gate traffic. Verification stays at YAML + `describe netpol` on this cluster
+- Big finds this session:
+  - **YAML triage W3 lesson held**: multi-doc parse error at "line 17" = line 17 of the second doc, file line 36. Did the math, found the misindented `ports:`
+  - **Modern kubectl logs defaults**: `kubectl logs <multi-container-pod>` doesn't error; defaults to `spec.containers[0]` with stderr notice. Doc updated
+  - **`--previous` can fail on fast crashers** — containerd may GC the dead container before kubelet can fetch logs. Fallback: `describe pod` shows Last State + exit code regardless
+  - **`netpol` is the canonical short name** — avoid typing `networkpolicy` (and avoid the `netowkrpolicy` typo)
+- Things to work on tomorrow (Day 4):
+  - Watch Udemy NetworkPolicy + lab solutions (owed from tonight's Block 2 sub)
+  - Connectivity debugging workflow with deliberate breakage (endpoints → describe svc → selector → READY → exec curl)
+  - Cross-domain NP + Deploy + Svc + CM stack with one `matchExpressions` rep
+  - Calibration recall test (interpretation drills) AFTER reps, per the new ordering rule
 
 ### Day 4 (Thursday May 28)
 - YAML Speed: _____ reps clean

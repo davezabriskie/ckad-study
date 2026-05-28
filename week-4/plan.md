@@ -52,6 +52,8 @@ Services (all four types), Ingress (high repetition, cold), NetworkPolicy (high 
 
 **New this day**: full debug workflow (`get endpoints` → `describe svc` → pod selector check → READY check → `exec curl`). One full break/fix scenario with no hints. Cross-domain task: NetworkPolicy + Deployment + Service + ConfigMap (isolated app stack). If a NetworkPolicy comes up here, one rep uses `matchExpressions`.
 
+**Owed from Day 3**: Udemy NetworkPolicy section + lab solutions — no Udemy access Wed evening, Day 3 Block 2 was text-overview substitute. Catch the video before Day 4 Block 3 if access is back.
+
 ---
 
 ### Day 5 — Friday May 29 (75 min): Milestone prep + weak-spot drilling
@@ -59,6 +61,8 @@ Services (all four types), Ingress (high repetition, cold), NetworkPolicy (high 
 Task interpretation drill block (15 min, literal-prompt-name discipline from W3 carry). Weak-spot drills based on Days 1–4 notes. **Probe variety check**: ensure one `exec` probe and one `tcpSocket` probe were written this week — fill the gap here if not. Optional 25-min self-mock from a subset of milestone tasks.
 
 **Forced rep — Kustomize labels + Service + Deployment** (Day 1 stumble, third week running): write a base with a Deployment AND a Service sharing a selector. Overlay adds `env: dev` label. Must survive two `apply -k` cycles without an immutable-selector error. Reference: `notes.md` → Key Concepts → "Three practical patterns".
+
+**Forced rep — Literal-prompt-name discipline** (now 5 occurrences W3+W4: `db-svc`/`db-client`, Block 3 rep 2 backend, Block 4 medium `medium` vs `shop-ing`, missing Deployment top-label, Day 3 rep 2 `all-` vs `allow-`). Drill: 5 task prompts with deliberately verbose / similar names; write resources with names matching exactly, including hyphens/words. Self-grade by diffing prompt names against `metadata.name` in saved YAML.
 
 ---
 
