@@ -258,10 +258,29 @@ Before any apply on Day 2:
   - Cross-domain NP + Deploy + Svc + CM stack with one `matchExpressions` rep
   - Calibration recall test (interpretation drills) AFTER reps, per the new ordering rule
 
-### Day 4 (Thursday May 28)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+### Day 4 (ran Friday May 29 — schedule slipped one day from planned Thu May 28)
+- YAML Speed: cross-domain `shop` stack built reference-open (CM via generator, Deployment scaffold+edit for `tier` label & `envFrom`, Service, hand-written NetworkPolicy). NP `matchExpressions` rep clean — `describe` confirmed `role in (frontend,worker)`
+- Tasks Completed: metrics-server install on kind (Day 3 gap closed), Block 2 (5-step debug workflow on healthy stack), Block 3 (break/fix — 2 stacked faults found + fixed, no peeking), Block 4 (cross-domain shop stack, all verifications green). **Not done**: Block 1 Udemy NP video (jumped straight to metrics-server + Block 2 — still owed), Block 5 interpretation drills (deferred — both roll to Day 5)
+- Bonus: closed the W4 set-based-selector carry again (`matchExpressions` in Block 4 NP)
 - Areas to improve:
+  - **Namespace discipline — the predicted miss**: built the entire Block 4 stack in `default`, ran the `-n shop` verify, got empty results, then had to create `shop` and re-apply. Left orphan copies in `default` to clean. Exam habit: `kubectl config set-context --current --namespace=shop` once, or `-n shop` on the *generators* so YAML is stamped from the start
+  - **`kubectl create service clusterip` sets selector to the SERVICE name, not the deployment's pods** — `create service clusterip shop-backend-svc` → `selector: app=shop-backend-svc`, which matches nothing (pods are `app=shop-backend`). `kubectl expose deployment` is the right generator: it inherits the deployment's selector. Use `expose`, not `create service`, when fronting an existing deployment
+  - **`targetPort` fix direction (Block 3 Fault B)**: burned ~3 min trying to set the Service to `8080` (the broken value) before landing on `80`. Rule: a wrong `targetPort` is fixed by pointing it at whatever the container actually LISTENs on (nginx → 80), not by matching the broken number
+  - **`kubectl patch` strategic-merge appends on the `ports` array** — merge key is `port`. Patching `port: 8080` when the existing entry is `port: 80` ADDS a second port instead of replacing → multi-port Service → `spec.ports[1].name: Required value`. Match the existing `port` key to update in place, or just `kubectl edit`
+  - **Literal-name slip continues — `shop-svc` typed twice** in Block 3 exec tests (svc is `shop-api`; also fat-fingered `shop-backend` for `shop-backend-svc`). Same W4 naming pattern. Day 5 forced rep is now well-earned
+  - **`kubectl explain` field paths are case-sensitive & lowercase** — `NetworkPolicy.spec.Ingress` fails; `networkpolicy.spec.ingress.from.podSelector.matchExpressions` works. `matchExpressions` is plural (typed singular several times)
+- Big finds this session:
+  - **`create service` vs `expose` selector behavior** — see above. The single most useful Service-generator distinction; `expose` inherits, `create service` invents `app=<name>`
+  - **Endpoints show `targetPort`, not `port`** — the IP:port pairs in `kubectl get endpoints` are pod-side (targetPort). When they diverge from the Service `port`, endpoints quietly reveal where traffic is actually being sent. Populated endpoints + failing `exec` = look at the port, not the selector
+  - **`v1 Endpoints` is deprecated in v1.33+ → `discovery.k8s.io/v1 EndpointSlice`** — `kubectl get endpoints` still works for CKAD; modern view is `kubectl get endpointslices`. Don't be startled by the warning
+  - **metrics-server on kind needs `--kubelet-insecure-tls`** — kind kubelet serving certs aren't signed by the cluster CA, so the scrape TLS handshake fails and the pod never goes Ready. Patch the deployment arg. Local-only convenience; exam clusters have it pre-installed (closes Day 3 "server absent" gap)
+  - **The two-fault break/fix landed its lesson**: fixing the selector (Fault A) populated endpoints and made the stack LOOK healthier, but `wget` still failed (Fault B, targetPort). Did NOT stop early — walked the full workflow. Best move: sanity-checking against known-good `web-svc` to isolate the problem to `shop-api`
+- Things to work on tomorrow (Day 5 — milestone prep + weak-spot drilling):
+  - **Owed forward**: Udemy NP video (Block 1) + Block 5 interpretation drills (cold recall test)
+  - **Probe-variety gap**: only `tcpSocket` used this week (Day 3). No `exec` probe yet — fill it Day 5 per the success metric
+  - Forced rep — Kustomize labels + Service + Deployment (third week running)
+  - Forced rep — literal-prompt-name discipline (now 7+ occurrences W3+W4 incl. today's `shop-svc`)
+  - Namespace discipline drill — set context namespace, verify resources land where intended
 
 ### Day 5 (Friday May 29)
 - YAML Speed: _____ reps clean

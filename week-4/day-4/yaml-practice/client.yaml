@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: client
+  name: client
+spec:
+  containers:
+  - image: busybox
+    name: client
+    command: ['sh', '-c', 'while true; do echo "i slumber..."; sleep 10; done']
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
