@@ -132,7 +132,7 @@ Fill in `week-4/notes.md` Day 4 tracking:
 - [x] `matchExpressions` used — `describe` confirmed `role in (frontend,worker)`; closes the W4 set-based carry
 - [ ] Literal prompt names — **slipped**: `shop-svc` typed ×2 in exec tests (svc is `shop-api`). Logged; Day 5 forced rep earned
 - [x] Zero `create -f` / `create -k` — full `apply` form throughout (`create service`/`create deployment` generators used, then `apply -f`)
-- [ ] Probe-variety check — only `tcpSocket` this week (Day 3). **No `exec` probe yet** → flagged for Day 5
+- [x] Probe-variety check — **already met** (corrected in week audit): `tcpSocket` (Day 1 + Day 3) + `exec` (Day 2, `redis-cli ping`). Success metric closed since Day 2
 - [ ] Block 5 interpretation drills — **NOT done** (called session after Block 4); deferred to Day 5 as cold recall
 - [x] Areas to improve logged in `notes.md` Day 4
 

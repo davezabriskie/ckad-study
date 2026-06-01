@@ -277,18 +277,33 @@ Before any apply on Day 2:
   - **The two-fault break/fix landed its lesson**: fixing the selector (Fault A) populated endpoints and made the stack LOOK healthier, but `wget` still failed (Fault B, targetPort). Did NOT stop early — walked the full workflow. Best move: sanity-checking against known-good `web-svc` to isolate the problem to `shop-api`
 - Things to work on tomorrow (Day 5 — milestone prep + weak-spot drilling):
   - **Owed forward**: Udemy NP video (Block 1) + Block 5 interpretation drills (cold recall test)
-  - **Probe-variety gap**: only `tcpSocket` used this week (Day 3). No `exec` probe yet — fill it Day 5 per the success metric
+  - **Cold networking reps** (week-audit finding) — Ingress + NetworkPolicy have only been written *reference-open* (Days 2–4). The milestone tests them cold; Day 5 needs a cold pass of each so the milestone isn't the first cold attempt (serves the two <2-min success metrics)
+  - ~~Probe-variety gap~~ — **CORRECTED**: metric already met. `tcpSocket` Day 1 + `exec` Day 2 (`redis-cli ping`). The earlier "no exec probe yet" note was an error — Day 2 Block 0 closed it. No probe rep owed
   - Forced rep — Kustomize labels + Service + Deployment (third week running)
   - Forced rep — literal-prompt-name discipline (now 7+ occurrences W3+W4 incl. today's `shop-svc`)
   - Namespace discipline drill — set context namespace, verify resources land where intended
 
-### Day 5 (Friday May 29)
-- YAML Speed: _____ reps clean
-- Tasks Completed: ____/____
+### Day 5 (Sunday May 31 — condensed, ran back-to-back into Day 6 same sitting)
+- YAML Speed: Block B — Ingress cold (correct, but only via ~7 `k explain` calls down the path tree → reference-propped, not cold); NetworkPolicy ingress rule cold (correct, reference-closed). Block C — Kustomize overlay survived (immutable-selector trap avoided), literal names 5/5 exact.
+- Tasks Completed: Block B (cold networking reps + optional probe reinforcement), Block C (Kustomize + literal-name forced reps). Block A interpretation drills + owed Udemy NP video — not evidenced this session.
 - Areas to improve:
+  - **"Cold" was not cold (key insight, now a saved principle).** Block B Ingress was written with `explain` open the whole time. A rep done immediately after a lookup is *consolidation*, not a cold test — a real cold measurement needs interference or a delay. Running Day 5 + Day 6 back-to-back left no clean cold window, so the milestone's "cold" metrics on Ingress/probe/names are warm. See memory `feedback_cold_test_validity`.
+  - **Kustomize avoided the immutable-selector trap partly by luck** — relied on the modern `labels:` field defaulting to `includeSelectors: false` without writing it. Would break under legacy `commonLabels:`. Also: only ONE clean `apply -k` actually ran (after a `kustomzation.yaml` filename typo), then a render check was substituted for the required second apply — verification skipped.
+  - **Imperative `create` flag syntax shaky** — colon-vs-equals failed on nearly every generator (`--from-literal=test:west`, `--image: nginx`). Rule: `=` not `:`. Also `--string-data` → `--from-literal`, and `kubectl create networkpolicy` has **no generator** (hand-write only).
+  - **`describe` vs `explain` mix-up** — 3 `k describe ingress.spec` misfires before switching to `explain` (describe = live object, explain = schema).
+- Win: **literal-name discipline clean (5/5)** — the 7×-slip is closing.
 
-### Day 6 (Saturday May 30) — Milestone
-- Milestone Result: PASS / FAIL
-- Tasks Completed: ____/____
-- Total Time: _____ min
+### Day 6 (Sunday May 31) — Milestone (same sitting as Day 5)
+- Milestone Result: **PASS** — 7/7 tasks working, conditional on NetworkPolicy authoring (T6 needed a guided structural fix)
+- Tasks Completed: 7/7 (T1 NodePort, T2 Ingress, T3 Deploy+CM+Svc, T4 worker+exec-probe+resources, T5 connectivity debug, T6 egress NetworkPolicy, T7 observability). Full detail + per-task table in `milestone-results.md`.
+- Total Time: ~37 min (T1–5 + T7 within/near the 25-min window; T6 + T7-redo ran over)
 - Areas to improve:
+  - **NetworkPolicy cold authoring = the #1 gap.** Cold egress NP collapsed: `spec` written as a **list** not a map; DNS port typo `63`→`53`; combined `namespaceSelector`+`podSelector` peer written as two `-` items (**OR**) when the task needed one peer (**AND**) — the exact test point, fixed last and only with guidance. Survived 8+ `explain` calls. Drill 3 cold egress NPs early in Week 5.
+  - **"Applies clean ≠ correct"** — the OR-not-AND NP applied with zero error; the API never validates intent. Read NP rules back in plain English before calling done.
+  - **`sh -c` wrap now 3× confirmed** (Day 2 → D5 Block B → D6 T4). Bare `command: ['sleep','3600']`.
+  - **Namespace discipline repeat of Day 4** — applied T3 Deployment before adding `namespace: app`, left stray broken dupes in `default`. Stamp `-n <ns>` on the generator before first apply.
+- Big finds:
+  - **Connectivity debugging is a strength** — T5 cold, both stacked faults found, didn't stop at the first. Highest-value exam skill.
+  - **Verify against the live object, not the last apply** — caught T6's stale OR-version by reading `get netpol -o yaml`, not trusting the apply.
+  - **Task-design rule logged**: debug/fix tasks must ship a pre-broken manifest to apply blind (T5 did, T7 didn't). See memory `feedback_debug_tasks_ship_broken_yaml`.
+- Cleanup owed: `kubectl delete deploy api svc api-svc` (stray `default`-ns dupes from T3).

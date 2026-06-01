@@ -1,5 +1,7 @@
 # Week 4 — Plan (May 24–30)
 
+> **STATUS: COMPLETE** — milestone Sun May 31, 2026 (Day 5+6 combined sitting), **PASS 7/7, ~37 min**, conditional on NetworkPolicy authoring. Results in `milestone-results.md`. Schedule slipped ~2 days across the week; Days 5 & 6 ran back-to-back in one sitting.
+
 > Week 3 milestone hit Fri May 22 (conditional pass, 38 min exact). Week 4 starts Sun May 24 with a head-start session, Mon May 25 picks up, Tue is rest, Wed–Sat finish out. Focus: networking from cold memory + observability + debugging.
 
 ## Gaps Carried from Week 3
@@ -79,15 +81,15 @@ Results → `week-4/milestone-results.md`.
 
 ---
 
-## Week 4 Success Metrics
+## Week 4 Success Metrics (final)
 
-- [ ] Write Ingress YAML from cold memory in <2 min
-- [ ] Write NetworkPolicy (ingress rule) YAML from cold memory in <2 min
-- [ ] Write at least one NetworkPolicy using `matchExpressions`
-- [ ] Cover all four Service types in YAML across the week (ClusterIP, NodePort, LoadBalancer, ExternalName)
-- [ ] One `exec` probe + one `tcpSocket` probe used in tasks this week
-- [ ] Zero `kubectl create -f` / `create -k` calls in Days 3–6 transcripts (full-command `apply` form, no `create`)
-- [ ] Complete Week 4 milestone in 25-minute flexible window
+- [ ] Write Ingress YAML from cold memory in <2 min — **NOT met cold.** Reference-propped (~7 `explain` calls) both exposures; milestone T2 was warm. Carry to Week 5.
+- [ ] Write NetworkPolicy (ingress rule) YAML from cold memory in <2 min — **partial.** Ingress rule done reference-closed (Block B); **egress collapsed cold** at the milestone (spec-as-list + OR/AND peer). #1 carry to Week 5.
+- [x] Write at least one NetworkPolicy using `matchExpressions` — Days 3 & 4
+- [x] Cover all four Service types in YAML across the week (ClusterIP, NodePort, LoadBalancer, ExternalName) — Day 1 + NodePort at milestone
+- [x] One `exec` probe + one `tcpSocket` probe used in tasks this week — tcpSocket Day 1, exec Day 2, reinforced milestone T4
+- [x] Zero `kubectl create -f` / `create -k` calls in Days 3–6 transcripts — full `apply` form held; `create` used only as a generator
+- [ ] Complete Week 4 milestone in 25-minute flexible window — **~37 min** (T6 + T7-redo over)
 
 ---
 

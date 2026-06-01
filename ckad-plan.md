@@ -303,12 +303,33 @@ Complete networking + observability mix in **25-minute flexible window**:
 - Services and Networking (20%): Services, Ingress, NetworkPolicies
 - Application Observability and Maintenance (15%): debugging workflows, logs, monitoring commands
 
+## Status: COMPLETE (milestone Sun May 31, 2026 — PASS 7/7, ~37 min, conditional on NetworkPolicy authoring)
+- Strength: connectivity debugging cold (both stacked faults found). Gap carried to Week 5: cold NetworkPolicy authoring (egress collapsed: spec-as-list + OR/AND peer) and a genuinely-cold Ingress rep. See `week-4/milestone-results.md`.
+
 ---
 
 # WEEK 5 — Storage + Resource Management + Container Images
 
 ## Weekly Review (15 min)
 **Mixed Sprint**: Scaffold pod + deployment + service; write one Ingress and one NetworkPolicy cold
+
+### Kustomize selector + field drill (NEW — carry from W4, the 3-week stumble; reference-open, ~15 min)
+Reps against a small base (Deployment `web` + Service `web-svc`, shared `app: web` selector). **Render each with `kubectl kustomize <dir>` before any apply.**
+1. `labels:` with `includeSelectors: false` (the default) — label lands on metadata only, selectors untouched. The re-apply-safe form.
+2. `labels:` with `includeSelectors: true` — apply **twice**, observe the `spec.selector: field is immutable` error on the Deployment (the trap, on purpose). Explain why in one line.
+3. `images:` — bump the running tag via **`newTag: "1.25"`** (the field is `newTag`, NOT `version`/`tag`); `name:` matches the **base image name** (e.g. `nginx`), optional `newName:` swaps repo/name.
+4. `namePrefix:`/`nameSuffix:` + `namespace:` + `replicas:` (`- name: web` / `count: 4`) — all from the overlay, base untouched.
+5. `configMapGenerator:` from literals (`LOG_LEVEL=debug`, `MAX_CONN=100`) — note the **hash suffix** kustomize appends to the rendered name.
+
+**Selector mechanics cheat** (both toggles default `false`):
+
+| Target | base `pairs:` always | `includeSelectors: true` | `includeTemplates: true` |
+|---|:---:|:---:|:---:|
+| every `metadata.labels` | ✅ | — | — |
+| Deployment `spec.selector` + Service selector | — | ✅ | — |
+| pod template labels | — | — | ✅ |
+
+CKAD-safe default = **`includeSelectors: false`** (selectors are immutable → re-apply breaks). Avoid legacy `commonLabels:` (forces selectors true, no opt-out). The `sh -c`/argv rule and this drill are both seeded into the W7 Persistent-Error Ledger.
 
 ## Focus
 Volumes (persistent + ephemeral), PVC/PV, StatefulSets, resource requests/limits, ResourceQuota, LimitRange, container image build/modify
@@ -336,6 +357,10 @@ Volumes (persistent + ephemeral), PVC/PV, StatefulSets, resource requests/limits
   - Dockerfile basics: `FROM`, `RUN`, `COPY`, `CMD`, `ENTRYPOINT`, `EXPOSE`
   - Build: `docker build -t myimage:tag .`
   - Difference between `CMD` and `ENTRYPOINT` — and how Kubernetes pod `command`/`args` override them
+  - **`command`/`args` are argv — one token per array element (NEW — carry from W4, recurring 3× slip)**:
+    `["sleep","3600"]` ✅, not `["sleep 3600"]` ✗ (the latter seeks a binary literally named
+    "sleep 3600"). Quote numeric args (they're strings). Use `sh -c "..."` ONLY for shell features
+    (pipe, redirect, `&&`, `$VAR` expansion, globbing) — never to wrap a plain binary + args.
   - Modify an existing Dockerfile, rebuild, push (or `kind load` / `minikube image load` for local clusters)
   - Run the new image in a Pod scaffold
 - kubectl explain for storage and resource spec fields
@@ -447,6 +472,61 @@ Mixed domain atomic tasks, speed optimization, debugging workflows at full compl
 - **Debugging emphasis**: every session includes at least one break/fix scenario with no hints
 - All 5 exam domains must appear in this week's tasks
 - kubectl explain — target <20 seconds per lookup
+- **Context-switch discipline (NEW — meta-skill gap)**: every task begins with its
+  `kubectl config use-context <ctx>` line. A forgotten context switch = correct work on
+  the wrong cluster = automatic zero. By end of W7 this is reflexive, not a checklist item
+- **Full-length conditioning (NEW)**: at least one 90+ min uninterrupted integration block
+  this week to build stamina before the Day 5 mock — the jump from 35-min milestones to a
+  2-hour exam is the real shock, not the task difficulty
+
+## Exam-Craft Rituals (NEW — addressing meta-skill gap; establish this week)
+
+These are the points marginal candidates lose *despite knowing the material*. Drill until automatic.
+
+### 1. Context + namespace first, every single task
+```bash
+kubectl config use-context <task-context>                  # FIRST line of every task — no exceptions
+kubectl config set-context --current --namespace=<ns>      # if the task pins a namespace
+```
+Forgetting the context = zero credit on otherwise-correct work. A namespace miss = resources land
+in `default` = also zero (this already bit Week 4 Day 4). Make the context line muscle memory.
+
+### 2. Terminal setup ritual (first 60 seconds of the exam)
+Set once at exam start; pays for itself within three tasks. Automation belongs **here** — after
+mastery, not as a learning crutch.
+```bash
+alias k=kubectl
+export do='--dry-run=client -o yaml'        # k run x --image=nginx $do > x.yaml
+export now='--force --grace-period=0'        # k delete pod x $now
+source <(kubectl completion bash)            # tab-completion
+```
+vim — the YAML indentation footgun (a stray tab breaks the whole manifest):
+```vim
+" ~/.vimrc
+set expandtab tabstop=2 shiftwidth=2
+set number
+```
+Drill the full setup cold until it takes under a minute.
+
+### 3. Docs-navigation drill (the docs are open — use them fast)
+kubernetes.io is allowed in the exam browser; speed at finding the copy-paste YAML is trainable.
+- Curate a bookmark set: Pod spec, Ingress, NetworkPolicy, RBAC, SecurityContext, volumes, Kustomize.
+- Drill: "find the `<resource>` example and copy it in <30 seconds." Time it.
+
+## Persistent-Error Ledger (NEW — kills recurring mistakes)
+
+Per-week gap carry has NOT retired the sticky errors (literal-name slips: 7+ across W3–W4;
+Kustomize selector trap: 3 weeks running). Add a spaced-repetition mechanism:
+
+- Maintain a running ledger (`persistent-errors.md`) of any error that has recurred **2+ times**.
+- At the **start of every session W7–W9**, spend 60 seconds drilling the ledger items cold.
+- An item graduates off the ledger after **3 consecutive clean sessions** (no recurrence).
+- Ledger seed (from W3–W4 notes):
+  1. Literal prompt-name discipline (`metadata.name` exact — hyphens + word order)
+  2. Kustomize `includeSelectors: false` + `includeTemplates: true` on the `labels:` transformer
+  3. `-f` (file) vs `-k` (directory)
+  4. Namespace discipline (set context, verify resources land where intended)
+  5. `command`/`args` argv tokenization — bare `["sleep","3600"]`; `sh -c` only for shell features (3× across W4)
 
 ## Debugging scenarios to include
 - Pod stuck in CrashLoopBackOff: wrong command/args override
@@ -505,6 +585,16 @@ kubectl convert -f old-manifest.yaml --output-version apps/v1   # if kubectl-con
 
 Drill: take a deprecated manifest, identify what to change, apply the migrated version.
 
+### Ambassador & Adapter Multi-Container Patterns (NEW — App Design gap, ~15 min)
+W1 covered sidecar + init; the official curriculum lists all four. Close the gap:
+- **Ambassador** — a proxy container brokering the main container's outbound connections (e.g. a
+  localhost proxy to a sharded DB). The app talks to `localhost:<port>`; the ambassador handles routing.
+- **Adapter** — a container that transforms the main container's output into a standard format
+  (e.g. reshaping app logs/metrics for a scraper).
+
+Both are just multi-container Pods sharing an `emptyDir` or `localhost` networking — no new API.
+Drill: one Pod with a main container + an adapter sidecar tailing/transforming a shared log file.
+
 ## Mixed task types (VARIABLE DIFFICULTY)
 - **Quick**: Fix a broken resource (single issue, no hints); DaemonSet from scaffold
 - **Medium**: Three-domain scaffold + refine + verify running; migrate a deprecated API manifest
@@ -517,6 +607,8 @@ Complete integration challenge in **35-minute flexible window**:
 - 3 medium cross-domain combinations (2-3 domains each)
 - 1 complex end-to-end application (4+ domains, all verified running)
 - 1 break/fix scenario with no hints
+- **Time trendline**: record target (35 min) vs actual; compare against W2–W6 milestone times.
+  Times should be converging downward — if they aren't, speed is the explicit W8–W9 priority
 
 ## Day 5 — Udemy Mock Exam (KodeKloud)
 Run one of the full mock exams from the Mumshad CKAD course (KodeKloud platform).
@@ -541,7 +633,8 @@ Running the mock here gives a full week of targeted drilling before killer.sh.
 
 **Day 3-4: Full-Stack Integration**
 - Day 3: Cross-domain scenarios covering all 5 domains
-- Day 4: Speed optimization — scaffold + refine cycle under time pressure
+- Day 4: Speed optimization — scaffold + refine cycle under time pressure; close with a
+  self-mock (≥70%, all domains) as the conditioning rep before killer.sh
 
 **Day 5-7: killer.sh**
 - Day 5: **killer.sh Session 1** — official CKAD simulator bundled with exam purchase
@@ -560,10 +653,10 @@ Running the mock here gives a full week of targeted drilling before killer.sh.
 - **killer.sh is harder than the real exam by design** — treat score as a floor, not a ceiling
 
 ## Milestone
-- Self-mock Day 5: ≥70%, all domains attempted
-- killer.sh Session 1: score recorded; target ≥60%
+- Self-mock (Day 4): ≥70%, all domains attempted
+- killer.sh Session 1 (Day 5): score recorded; target ≥60%
 - No single domain below 50% across mock results
-- Context switches executed without hesitation
+- Context switches executed without hesitation (the W7 ritual, now under exam conditions)
 
 ---
 
@@ -578,11 +671,23 @@ Weak areas from Week 8 + speed refinement + final validation
 - Intensive Ingress + NetworkPolicy cold-write reps if either was weak
 - kubectl explain target: <15 seconds per lookup
 - Scaffold + refine cycle target: pod with probes + securityContext in <4 minutes
+- **Setup-ritual target**: full terminal + vim + alias setup (the W7 ritual) cold in <60 seconds
+- **Persistent-error ledger must be empty** — every item cleared (3 clean sessions) before exam day.
+  Anything still on it is your exam-morning warm-up
+
+## Exam-Day Logistics (NEW — do not discover these during the exam)
+- PSI/proctor: ID ready, room scan, single monitor, clear desk — verify requirements the night before
+- The exam terminal is a browser; copy-paste is finicky — use the provided paste and watch for mangled YAML
+- You get a bookmarked kubernetes.io tab set — confirm your bookmarks are in place before starting
+- **Flag-and-skip strategy**: read all tasks first, do high-weight/cheap tasks first, flag the rest.
+  Partial credit counts — never leave a task fully blank
+- Run a short logistics dry-run (login flow, terminal feel) if the killer.sh environment allows
 
 ## Milestone
 - **killer.sh Session 2** (Day 4-5): target ≥65%
 - 1 full mock exam ≥80%, all domains
 - Finish with ≥15 minutes remaining
+- Logistics dry-run completed — no exam-day surprises
 
 ---
 

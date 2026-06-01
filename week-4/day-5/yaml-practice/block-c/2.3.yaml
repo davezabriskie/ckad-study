@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: inventory-api-backend
+  name: inventory-api-backend
+spec:
+  replicas: 47
+  selector:
+    matchLabels:
+      app: inventory-api-backend
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: inventory-api-backend
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+        resources: {}
+status: {}
