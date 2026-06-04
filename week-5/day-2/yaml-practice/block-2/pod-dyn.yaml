@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: dyn-pod
+  name: dyn-pod
+spec:
+  volumes:
+    - name: tmp-mnt
+      persistentVolumeClaim:
+        claimName: dyn-pvc
+  containers:
+    - command:
+        - 'sh'
+        - '-c'
+        - 'df -h /; sleep 60;'
+      image: busybox
+      name: manual-pod
+      volumeMounts:
+        - mountPath: /pvc
+          name: tmp-mnt 

@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-from-monitoring
+spec:
+  policyTypes:
+    - Ingress
+  podSelector:
+    matchLabels:
+      app: web
+  ingress:
+    - from:
+       - podSelector:
+           matchLabels:
+             app: monitoring
+      ports:
+        - port: 80
+          protocol: TCP

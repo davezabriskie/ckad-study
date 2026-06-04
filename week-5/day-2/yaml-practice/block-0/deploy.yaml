@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: b0-deploy
+  name: b0-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: b0-deploy
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: b0-deploy
+    spec:
+      containers:
+        - image: nginx:1.21
+          name: nginx
+          ports: 
+            - containerPort: 80
+          livenessProbe:
+            tcpSocket:
+              port: 80
+          resources:
+            limits:
+              cpu: 26m
+              memory: 128Mi
+

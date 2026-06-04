@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: manual-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeName: manual-pv
+  storageClassName: manual
+  resources:
+    requests:
+      storage: 1.95M

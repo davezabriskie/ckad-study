@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-to-metrics
+spec:
+  policyTypes:
+    - Egress
+  podSelector:
+    matchLabels:
+      app: api
+  egress:
+    - to:
+       - namespaceSelector:
+          matchLabels:
+            team: platform
+         podSelector:
+           matchLabels:
+             role: metrics
+      ports:
+        - port: 9090
+          protocol: TCP

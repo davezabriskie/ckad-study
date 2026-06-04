@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: scratch
+  name: scratch
+spec:
+  volumes:
+    - name: data
+      emptyDir: {}
+  containers:
+    - command:
+      - sh
+      - -c
+      - while true; do cat /data/log; echo 'sleep'; sleep 1; echo; done;
+      image: busybox
+      name: reader
+      volumeMounts:
+        - name: data
+          mountPath: /data
+    - name: writer
+      image: busybox
+      command: ['sh', '-c', 'while true; do echo $(date) >> /data/log; sleep 1; done;']
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always

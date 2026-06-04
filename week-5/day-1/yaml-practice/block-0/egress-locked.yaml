@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-locked
+spec:
+  policyTypes:
+    - Egress
+  podSelector:
+    matchLabels:
+      app: api
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            role: metrics
+        namespaceSelector:
+          matchLabels:
+            team: platform
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+      - namespaceSelector: 
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: In
+              values:
+                - kube-system
+      ports:
+        - port: 53
+          protocol: UDP

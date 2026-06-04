@@ -20,8 +20,8 @@ This repository contains my 9-week study plan and practice materials for the Cer
 - [X] Week 1 - Core Application Concepts
 - [X] Week 2 - Workload Management
 - [X] Week 3 - Application Configuration + Deployment Tooling
-- [ ] Week 4 - Networking & Services
-- [ ] Week 5 - Persistence & Storage
+- [X] Week 4 - Networking & Services (milestone PASS 7/7, May 31)
+- [ ] Week 5 - Storage + Resource Management + Container Images (in progress — Day 1 done)
 - [ ] Week 6 - Advanced Application Patterns
 - [ ] Week 7 - Integration & Review
 - [ ] Week 8 - Full Application Simulation
@@ -29,8 +29,8 @@ This repository contains my 9-week study plan and practice materials for the Cer
 
 ## Practice Environment
 
-- Primary: killercoda.com
-- Secondary: labs.k8s.io or local cluster
+- Primary: local **kind** cluster (Calico CNI as of W5 — NetworkPolicy enforced; metrics-server installed)
+- Secondary: killercoda.com, labs.k8s.io
 - Course: Kubernetes for the Absolute Beginners + CKAD with Practice Tests (Mumshad Mannambeth)
 
 ---
