@@ -1,0 +1,54 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: full-control
+spec:
+  policyTypes:
+    - Ingress
+    - Egress
+  podSelector:
+    matchExpressions:
+      - key: classification
+        operator: In
+        values:
+          - private
+          - prod
+          - secret
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: log-ingestor
+          namespaceSelector:
+            matchLabels:
+              team: platform
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - ops
+                  - logging
+                  - metrics
+        - podSelector:
+            matchLabels:
+              secure: "true"
+      ports:
+        - port: 8081
+          protocol: TCP
+        - port: 8082
+          protocol: UDP
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: backdoor 
+                operator: Exists
+  egress:
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - kube-system
+

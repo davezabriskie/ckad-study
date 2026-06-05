@@ -97,9 +97,9 @@ Results → `week-5/milestone-results.md`.
 - [ ] Write a **cold egress NetworkPolicy** (spec-as-map, one-peer-AND vs separate-peer-OR, `policyTypes`) in <2 min with no `explain` — closes the W4 #1 gap
 - [ ] **Ingress scaffold + hand-add**: `create ingress --rule` cold in one shot (✓ already) + hand-add a `tls:` block and a `defaultBackend:` block to a scaffolded Ingress — Day 5 drill
 - [x] Write a **PVC** + mount it into a pod from memory — Day 1 (reference-open first exposure; ~6 min, target automaticity later)
-- [ ] Write a **StatefulSet** (`serviceName` + `volumeClaimTemplates`) + headless service from memory
+- [x] Write a **StatefulSet** (`serviceName` + `volumeClaimTemplates`) + headless service from memory — Day 3 ✓
 - [x] Add `resources.requests`/`limits` (CPU + memory) to a Deployment — Day 2; OOMKilled demo confirmed (Exit Code 137, QoS Burstable)
-- [ ] Create a **ResourceQuota** + **LimitRange**; observe a quota rejection and a LimitRanger default injection
+- [x] Create a **ResourceQuota** + **LimitRange**; observe a quota rejection and a LimitRanger default injection — Day 3 ✓
 - [ ] Use all three ephemeral volume types this week: `emptyDir` (incl. `medium: Memory`), `downwardAPI`, `projected`
 - [x] Use `valueFrom: fieldRef` (`MY_POD_IP`) and `resourceFieldRef` at least once each — Day 2; `resourceFieldRef` CPU millicore truncation gotcha noted
 - [ ] **Image**: modify a Dockerfile, rebuild, `kind load`, run in a pod with the correct `imagePullPolicy`

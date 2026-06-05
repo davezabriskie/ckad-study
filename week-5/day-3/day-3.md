@@ -112,10 +112,11 @@ Note: `statefulset.spec.serviceName` is required; `volumeClaimTemplates` is a li
 
 ## End-of-Session Checklist
 
-- [ ] Kustomize drill: all 5 reps rendered before apply; trap (#2) reproduced and explained
-- [ ] StatefulSet from memory: `serviceName` + `volumeClaimTemplates`; per-replica PVCs created
-- [ ] Headless Service hand-written with `clusterIP: None`
-- [ ] ResourceQuota rejection observed; LimitRange default injection confirmed
-- [ ] downwardAPI volume exposed name + labels as files
-- [ ] Namespace-first held: `quota-demo` resources never leaked to `default`
-- [ ] Areas to improve logged in `notes.md`
+- [ ] Kustomize drill: all 5 reps rendered before apply; trap (#2) reproduced and explained — **NOT RUN (time); carry to Day 5**
+- [x] StatefulSet from memory: `serviceName` + `volumeClaimTemplates`; per-replica PVCs created ✓
+- [x] Headless Service hand-written with `clusterIP: None` ✓
+- [x] ResourceQuota rejection observed; LimitRange default injection confirmed ✓
+- [x] downwardAPI volume exposed name + labels as files ✓ (verified via `exec`, not logs)
+- [x] Namespace-first held: `quota-demo` resources in correct namespace ✓
+- [x] Areas to improve logged in `notes.md`
+- [ ] **Owed: Block 1 Udemy StatefulSets; Kustomize drill (Day 5); Block 5/6 drills**

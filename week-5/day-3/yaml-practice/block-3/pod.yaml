@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: buster
+  name: buster
+  namespace: quota-demo
+spec:
+  containers:
+  - command:
+    - sleep
+    - "60"
+    image: busybox
+    name: buster
+    resources:
+      requests:
+        cpu: 1
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi

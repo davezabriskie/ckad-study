@@ -62,6 +62,19 @@ command:       # RIGHT — both commands in one string
 
 ---
 
+## Cluster Reset Checklist (kind)
+After `kind delete/create` or namespace nukes:
+1. `kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.24/deploy/local-path-storage.yaml`
+2. Wait for `local-path-provisioner` pod `Running`
+3. `kubectl get pods -n local-path-storage` to confirm
+
+To clean practice resources without nuking the cluster:
+```bash
+./scripts/cluster-clean.sh --dry-run    # preview
+./scripts/cluster-clean.sh              # run
+```
+**Never** `kubectl delete ...,namespace,..., --all` — deletes all namespaces including `local-path-storage`.
+
 ## kubectl Commands for Week 5
 
 _To be filled in as the week progresses._
@@ -128,9 +141,32 @@ _To be filled in as the week progresses._
   - **`resourceFieldRef` CPU millicore limitation** — useful for memory, not for sub-1-core CPU values.
 
 ### Day 3 (Thursday June 4)
-- YAML Speed: _____
-- Tasks Completed: ____/____
+- **COMPLETE.** ~2.5 hrs. Block 1 (Udemy StatefulSets) — TL;DW delivered in-session; watch later.
+- YAML Speed: Block 0 NP — ~20 apply cycles (matchExpressions structure bug, now resolved); Ingress — ~7 applies + explain calls (TLS + defaultBackend first rep); Block 2 StatefulSet — ~15 cycles (provisioner down + volumeClaimTemplates vs volumes confusion); Block 3 — quota/limitrange landed cleanly after dotted-key fix; Block 4 — downwardAPI + cross-domain STS clean.
+- Tasks Completed: Block 0 (NP + Ingress cold reps) + Block 2 (StatefulSet + headless svc) + Block 3 (ResourceQuota + LimitRange — rejection + admission verified) + Block 4 (downwardAPI volume + cross-domain cache-sts). Block 1 Udemy owed. Block 5/6 drills skipped — time.
+- Block 0 detail:
+  - **NP — complex rep** (combined peers, matchExpressions, multi-port, ingress+egress, `policyTypes` both). Structural bones correct after iteration. Main bugs: `matchExpressions` items split into separate `-` entries (now fixed); `podSelector` using `kubernetes.io/metadata.name` (namespace label, not pod label — `podSelector` only sees pod labels). `kubernetes.io/metadata.label['backdoor']` invented syntax caught by API — correct form is just the bare label key.
+  - **Ingress — strong rep**: multi-host, multi-path, TLS block, defaultBackend, `Exact` vs `Prefix` — all in one file. `backend.service.port.number` nesting automatic. TLS needed `explain` (first manual add). `defaultBackend.host` invented field (doesn't exist — just `service.name/port.number`). Port `404` as port number (HTTP status ≠ port).
+  - **AND-vs-OR peer shape held** throughout NP. `kubernetes.io/metadata.name` used correctly for namespace selectors. ✓
+- Block 2 detail:
+  - **Headless service** ✓ — `clusterIP: None`, correct selector, clean.
+  - **StatefulSet** ✓ — `serviceName`, `volumeClaimTemplates` as spec sibling (not `volumes:`), mount wired. Initial attempt used `volumes.persistentVolumeClaim` — caught via explain, corrected.
+  - Provisioner down again mid-session — reinstalled. **Cluster-reset checklist** needed: recreate → reinstall provisioner → go.
+- Block 3 detail:
+  - **ResourceQuota `hard:` dotted keys** — wrote `limits:` as nested block initially (`Invalid value: "limits"`). Fixed to flat dotted form (`limits.cpu`, `limits.memory`). ✓
+  - **Quota rejection observed** — `k run tester` forbidden without resources. ✓
+  - **LimitRange admission** — same pod admitted after LimitRange applied; `describe` showed injected defaults. ✓
+  - Deployment quota exceeded event — read the error correctly (which resource was the blocker). ✓
+- Block 4 detail:
+  - **downwardAPI volume** ✓ — `metadata.name` + `metadata.labels` as files. Labels require actual labels on the pod (empty file otherwise). `exec` is reliable; `logs` at startup is not (race condition + stdout buffering on no-newline symlinked files).
+  - **Cross-domain cache-sts** — StatefulSet + headless svc + ConfigMap wired via `envFrom`. `accessModes: ReadWriteMany` rejected by local-path provisioner (kind limitation — `RWO` only). Fixed. Missing `volumeMount` patched post-session.
+  - `storage: 0.5Gi` → `512Mi` (binary suffix convention). ✓
 - Areas to improve:
+  - **`matchExpressions` structure** — sibling keys not separate `-` items. Getting cleaner but still took many cycles.
+  - **`podSelector` scope** — only pod labels, never namespace membership. `namespaceSelector` for namespace targeting.
+  - **Strip dry-run artifacts** — still recurring (`strategy: {}` etc.).
+  - **`volumeMount` on StatefulSet** — don't forget to wire `volumeClaimTemplates` name into `volumeMounts`.
+  - **`0.5Gi`** — use `512Mi`. Binary fractions (`0.5Gi`) parse but are non-idiomatic.
 
 ### Day 4 (Friday June 5)
 - YAML Speed: _____

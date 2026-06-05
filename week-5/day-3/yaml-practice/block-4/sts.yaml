@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cache-sts
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cache
+  serviceName: cache-headless
+  template:
+    metadata:
+      labels:
+        app: cache
+    spec:
+      containers:
+        - name: cache
+          image: redis:7
+          envFrom:
+            - configMapRef:
+                name: cache-cfg
+          volumeMounts:
+            - name: cache-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: cache-data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 512Mi
+

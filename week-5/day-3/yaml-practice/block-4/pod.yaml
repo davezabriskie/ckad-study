@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meta
+  labels:
+    test: west
+    app: testing
+spec:
+  volumes:
+    - name: pod-info
+      downwardAPI:
+        items:
+          - path: name
+            fieldRef:
+              fieldPath: metadata.name
+          - path: labels
+            fieldRef:
+              fieldPath: metadata.labels
+  containers:
+    - image: busybox
+      name: busy
+      command:
+        - sh
+        - -c
+        - cd /etc/podinfo; while true; do date; for f in *; do echo "=== $f ==="; cat "$f" && echo; done; sleep 3; done;
+      volumeMounts:
+        - mountPath: /etc/podinfo
+          name: pod-info

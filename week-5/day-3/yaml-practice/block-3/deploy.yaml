@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: buster
+  name: buster
+  namespace: quota-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: buster
+  template:
+    metadata:
+      namespace: quota-demo
+      labels:
+        app: buster
+    spec:
+      containers:
+      - image: busybox
+        name: busybox
+        resources:
+          requests:
+            cpu: 1
+            memory: 0.5Gi
+          limits:
+            cpu: 2
+            memory: 2Gi

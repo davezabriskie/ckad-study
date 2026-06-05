@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cold-ing
+spec:
+  rules:
+    - host: app.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: dummy-svc
+                port:
+                  number: 80
+            path: /test/
+            pathType: Prefix
+          - backend:
+              service:
+                name: trill-svc
+                port:
+                  number: 443
+            path: /real/
+            pathType: Prefix
+    - host: insecure.app.local
+      http:
+        paths:
+          - path: /
+            pathType: Exact
+            backend:
+              service:
+                name: public-svc
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - app.local
+      secretName: 'shh-secret'
+  defaultBackend:
+    service:
+      name: error-svc
+      port:
+        number: 404
